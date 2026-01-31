@@ -1,0 +1,35 @@
+{{define "title"}}AITU Connect — Home{{end}}
+
+{{define "content"}}
+<section class="hero">
+  <h1>Welcome to AITU Connect</h1>
+  <p class="muted">
+    Unified campus platform with role-based access.
+  </p>
+
+  <div class="hero-actions">
+    <a href="/login" class="btn">Sign in</a>
+    <a href="/canteens" class="btn ghost">View canteens</a>
+  </div>
+</section>
+
+<section class="grid">
+  <div class="card">
+    <h2>Canteens</h2>
+    <p class="muted">All campus canteens and locations.</p>
+  </div>
+
+  <div class="card">
+    <h2>News</h2>
+    <p class="muted">Publish updates with role-based permissions.</p>
+  </div>
+
+  <div class="card">
+    <h2>Security</h2>
+    <p class="muted">JWT authentication and RBAC.</p>
+    <span class="tag">JWT • bcrypt • roles</span>
+  </div>
+</section>
+{{end}}
+
+{{template "base" .}}

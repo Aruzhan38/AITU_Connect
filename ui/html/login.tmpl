@@ -1,0 +1,74 @@
+{{define "title"}}Authorization — AITU Connect{{end}}
+
+{{define "content"}}
+<div class="row mb-4">
+  <div class="col-lg-8">
+    <h1 class="fw-bold">Authorization</h1>
+    <p class="text-muted mb-0">Login or create a new account</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="card-title fw-bold mb-3">Login</h3>
+
+        <form id="loginForm" class="d-grid gap-3">
+          <div>
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" name="email" placeholder="student@aitu.kz" required>
+          </div>
+
+          <div>
+            <label class="form-label">Password</label>
+            <input class="form-control" type="password" name="password" placeholder="••••••••" required>
+          </div>
+
+          <button class="btn btn-primary btn-lg" type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="card-title fw-bold mb-3">Register</h3>
+
+        <form id="registerForm" class="d-grid gap-3">
+          <div>
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" name="email" placeholder="new@aitu.kz" required>
+          </div>
+
+          <div>
+            <label class="form-label">Password</label>
+            <input class="form-control" type="password" name="password" minlength="6" placeholder="min 6 chars" required>
+          </div>
+
+          <button class="btn btn-success btn-lg" type="submit">Create account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-4">
+  <div class="card-body p-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h3 class="fw-bold mb-0">Status</h3>
+      <div class="d-flex gap-2">
+        <button id="btnMe" type="button" class="btn btn-outline-primary">Check /me</button>
+        <button id="btnLogout" type="button" class="btn btn-outline-secondary">Logout</button>
+      </div>
+    </div>
+
+    <pre id="status" class="bg-dark text-light rounded p-3 mb-0" style="min-height:140px;">Not logged in</pre>
+  </div>
+</div>
+
+<script src="/static/js/auth.js"></script>
+{{end}}
+
+{{template "base" .}}

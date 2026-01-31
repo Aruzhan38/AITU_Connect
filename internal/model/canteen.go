@@ -11,7 +11,7 @@ type Canteen struct {
 type CanteenNews struct {
 	ID        string    `json:"id"`
 	CanteenID string    `json:"canteen_id"`
-	AdminID   string    `json:"admin_id"`
+	AdminID   string    `json:"-"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	Price     string    `json:"price"`

@@ -5,11 +5,22 @@ import "net/http"
 func NewServer(h *Handler) *http.Server {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", HomeHandler)
-	mux.HandleFunc("/login", LoginHandler)
+	mux.HandleFunc("/", h.HomePage)
+	mux.HandleFunc("/login", h.LoginPage)
 	mux.HandleFunc("/api/canteens", h.GetCanteens)
-	mux.HandleFunc("/api/canteen-news", h.CreateCanteenNews)
 	mux.HandleFunc("/api/canteens/", h.GetCanteenNews)
+	mux.HandleFunc("/auth/register", h.Register)
+	mux.HandleFunc("/auth/login", h.Login)
+	mux.Handle("/me", AuthMiddleware(h.authUC)(http.HandlerFunc(h.Me)))
+
+	mux.Handle(
+		"/api/canteen-news",
+		AuthMiddleware(h.authUC)(
+			RequireRoles("admin", "moderator", "teacher")(http.HandlerFunc(h.CreateCanteenNews)),
+		),
+	)
+
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/static"))))
 
 	return &http.Server{
 		Addr:    ":8080",

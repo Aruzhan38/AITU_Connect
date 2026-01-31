@@ -11,9 +11,11 @@ import (
 func Run(db *sql.DB) {
 	canteenRepo := pkg.NewCanteenRepository(db)
 	newsRepo := pkg.NewCanteenNewsRepository(db)
+	userRepo := pkg.NewUserRepository(db)
 
 	canteenUC := usecase.NewCanteenUsecase(canteenRepo, newsRepo)
-	handler := http.NewHandler(canteenUC)
+	authUC := usecase.NewAuthUsecase(userRepo, "super_secret_key")
+	handler := http.NewHandler(canteenUC, authUC)
 
 	server := http.NewServer(handler)
 
