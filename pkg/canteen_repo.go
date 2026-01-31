@@ -16,19 +16,20 @@ func NewCanteenRepository(db *sql.DB) *CanteenRepository {
 }
 
 func (r *CanteenRepository) GetAll(ctx context.Context) ([]model.Canteen, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT id, name, location FROM canteens")
+	rows, err := r.db.QueryContext(ctx,
+		`SELECT id, name, location FROM canteens ORDER BY name`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var result []model.Canteen
+	var out []model.Canteen
 	for rows.Next() {
 		var c model.Canteen
 		if err := rows.Scan(&c.ID, &c.Name, &c.Location); err != nil {
 			return nil, err
 		}
-		result = append(result, c)
+		out = append(out, c)
 	}
-	return result, nil
+	return out, rows.Err()
 }

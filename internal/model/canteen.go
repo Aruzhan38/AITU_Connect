@@ -9,11 +9,11 @@ type Canteen struct {
 }
 
 type CanteenNews struct {
-	ID        string    `json:"id"`
+	ID        int64     `json:"id"`
 	CanteenID string    `json:"canteen_id"`
-	AdminID   string    `json:"-"`
+	AdminID   int64     `json:"admin_id"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
-	Price     string    `json:"price"`
+	Price     *string   `json:"price,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }

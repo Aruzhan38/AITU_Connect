@@ -16,9 +16,10 @@ func NewServer(h *Handler) *http.Server {
 	mux.Handle(
 		"/api/canteen-news",
 		AuthMiddleware(h.authUC)(
-			RequireRoles("admin", "moderator", "teacher")(http.HandlerFunc(h.CreateCanteenNews)),
+			RequireRoles("admin", "moderator")(http.HandlerFunc(h.CreateCanteenNews)),
 		),
 	)
+	mux.HandleFunc("/canteens", h.CanteensPage)
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/static"))))
 

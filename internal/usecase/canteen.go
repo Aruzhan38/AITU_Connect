@@ -12,30 +12,21 @@ type CanteenUsecase struct {
 	newsRepo    *pkg.CanteenNewsRepository
 }
 
-func NewCanteenUsecase(c *pkg.CanteenRepository, n *pkg.CanteenNewsRepository,
-) *CanteenUsecase {
-	return &CanteenUsecase{
-		canteenRepo: c,
-		newsRepo:    n,
-	}
+func NewCanteenUsecase(canteenRepo *pkg.CanteenRepository, newsRepo *pkg.CanteenNewsRepository) *CanteenUsecase {
+	return &CanteenUsecase{canteenRepo: canteenRepo, newsRepo: newsRepo}
 }
-
-func (u *CanteenUsecase) GetCanteens(
-	ctx context.Context,
-) ([]model.Canteen, error) {
+func (u *CanteenUsecase) GetCanteens(ctx context.Context) ([]model.Canteen, error) {
 	return u.canteenRepo.GetAll(ctx)
 }
 
-func (u *CanteenUsecase) CreateNews(
-	ctx context.Context,
-	n model.CanteenNews,
-) error {
-	return u.newsRepo.CreateNews(ctx, n)
+func (u *CanteenUsecase) CreateNews(ctx context.Context, n model.CanteenNews) (int64, error) {
+	return u.newsRepo.Create(ctx, n)
 }
 
-func (u *CanteenUsecase) GetByCanteen(
-	ctx context.Context,
-	canteenID string,
-) ([]model.CanteenNews, error) {
+func (u *CanteenUsecase) GetNewsByCanteen(ctx context.Context, canteenID string) ([]model.CanteenNews, error) {
 	return u.newsRepo.GetByCanteen(ctx, canteenID)
+}
+
+func (u *CanteenUsecase) DeleteNews(ctx context.Context, id int64) error {
+	return u.newsRepo.Delete(ctx, id)
 }

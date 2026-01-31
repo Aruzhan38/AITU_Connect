@@ -4,8 +4,8 @@ import (
 	"AITU_Connect/internal/model"
 	"AITU_Connect/internal/usecase"
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -15,6 +15,9 @@ func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "login.tmpl", nil)
+}
+func (h *Handler) CanteensPage(w http.ResponseWriter, r *http.Request) {
+	render(w, "canteen.tmpl", nil)
 }
 
 type Handler struct {
@@ -32,40 +35,74 @@ func (h *Handler) GetCanteens(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h *Handler) GetCanteenNews(w http.ResponseWriter, r *http.Request) {
+	canteenID := strings.TrimPrefix(r.URL.Path, "/api/canteen-news/")
+	if canteenID == "" {
+		http.Error(w, "canteen_id required", 400)
+		return
+	}
+
+	data, err := h.canteenUC.GetNewsByCanteen(r.Context(), canteenID)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
 	json.NewEncoder(w).Encode(data)
 }
 
 func (h *Handler) CreateCanteenNews(w http.ResponseWriter, r *http.Request) {
-	var req model.CanteenNews
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
-		return
-	}
-
-	uid, ok := UserIDFromContext(r.Context())
+	adminID, ok := UserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		http.Error(w, "unauthorized", 401)
 		return
 	}
 
-	req.AdminID = fmt.Sprint(uid)
+	var req struct {
+		CanteenID string  `json:"canteen_id"`
+		Title     string  `json:"title"`
+		Content   string  `json:"content"`
+		Price     *string `json:"price"`
+	}
 
-	if err := h.canteenUC.CreateNews(r.Context(), req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", 400)
+		return
+	}
+
+	id, err := h.canteenUC.CreateNews(r.Context(), model.CanteenNews{
+		CanteenID: req.CanteenID,
+		AdminID:   adminID,
+		Title:     req.Title,
+		Content:   req.Content,
+		Price:     req.Price,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int64{"id": id})
 }
 
-func (h *Handler) GetCanteenNews(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/canteens/")
-	data, err := h.canteenUC.GetByCanteen(r.Context(), id)
+func (h *Handler) DeleteCanteenNews(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/canteen-news/")
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "invalid id", 400)
 		return
 	}
-	json.NewEncoder(w).Encode(data)
+
+	if err := h.canteenUC.DeleteNews(r.Context(), id); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type authReq struct {
