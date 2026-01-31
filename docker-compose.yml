@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: aitu_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: aitu_connect
+      POSTGRES_USER: aitu
+      POSTGRES_PASSWORD: aitu123
+    ports:
+      - "5434:5432"
+    volumes:
+      - aitu_pgdata:/var/lib/postgresql/data
+
+volumes:
+  aitu_pgdata:
