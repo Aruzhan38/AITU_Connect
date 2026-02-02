@@ -23,10 +23,11 @@ func (h *Handler) CanteensPage(w http.ResponseWriter, r *http.Request) {
 type Handler struct {
 	canteenUC *usecase.CanteenUsecase
 	authUC    *usecase.AuthUsecase
+	postUC    *usecase.PostUsecase
 }
 
-func NewHandler(canteenUC *usecase.CanteenUsecase, authUC *usecase.AuthUsecase) *Handler {
-	return &Handler{canteenUC: canteenUC, authUC: authUC}
+func NewHandler(canteenUC *usecase.CanteenUsecase, authUC *usecase.AuthUsecase, postUC *usecase.PostUsecase) *Handler {
+	return &Handler{canteenUC: canteenUC, authUC: authUC, postUC: postUC}
 }
 
 func (h *Handler) GetCanteens(w http.ResponseWriter, r *http.Request) {
@@ -150,4 +151,48 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token})
+}
+
+func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", 401)
+		return
+	}
+
+	var req struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", 400)
+		return
+	}
+
+	id, err := h.postUC.CreatePost(r.Context(), model.Post{
+		AuthorID: userID,
+		Title:    req.Title,
+		Content:  req.Content,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]int64{"id": id})
+}
+
+func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
+	posts, err := h.postUC.GetFeed(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(posts)
+}
+
+func (h *Handler) FeedPage(w http.ResponseWriter, r *http.Request) {
+	render(w, "feed.tmpl", nil)
 }

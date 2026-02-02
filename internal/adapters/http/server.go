@@ -12,7 +12,11 @@ func NewServer(h *Handler) *http.Server {
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/login", h.Login)
 	mux.Handle("/me", AuthMiddleware(h.authUC)(http.HandlerFunc(h.Me)))
-
+	mux.Handle("/api/posts/create", AuthMiddleware(h.authUC)(http.HandlerFunc(h.CreatePost)))
+	mux.HandleFunc("/api/posts/feed", h.GetFeed)
+	mux.HandleFunc("/feed", func(w http.ResponseWriter, r *http.Request) {
+		render(w, "feed.tmpl", nil)
+	})
 	mux.Handle(
 		"/api/canteen-news",
 		AuthMiddleware(h.authUC)(
