@@ -1,0 +1,54 @@
+{{define "title"}}Canteen News — AITU Connect{{end}}
+
+{{define "content"}}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="fw-bold mb-1" id="canteenName">Canteen</h1>
+    <p class="text-muted mb-0" id="canteenLocation"></p>
+  </div>
+  <a href="/canteens" class="btn btn-outline-secondary">← Back</a>
+</div>
+
+<hr class="my-4"/>
+
+<!-- блок для staff/admin -->
+<div id="createBox" class="card shadow-sm mb-4 d-none">
+  <div class="card-body">
+    <h5 class="fw-bold mb-3">Add update / menu</h5>
+
+    <form id="createNewsForm" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Title</label>
+        <input class="form-control" name="title" placeholder="New menu" required />
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Price (optional)</label>
+        <input class="form-control" name="price" placeholder="600₸" />
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Content</label>
+        <textarea class="form-control" name="content" rows="3" placeholder="What changed?" required></textarea>
+      </div>
+
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">Publish</button>
+      </div>
+    </form>
+
+    <div id="createMsg" class="small text-muted mt-2"></div>
+  </div>
+</div>
+
+<h4 class="fw-bold mb-3">Updates</h4>
+<div id="newsList" class="vstack gap-3"></div>
+
+<div id="emptyState" class="text-muted d-none">
+  No updates yet.
+</div>
+
+<script src="/static/js/canteen_news.js"></script>
+{{end}}
+
+{{template "base" .}}

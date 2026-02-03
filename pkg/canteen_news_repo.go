@@ -4,6 +4,7 @@ import (
 	"AITU_Connect/internal/model"
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type CanteenNewsRepository struct {
@@ -36,18 +37,10 @@ func (r *CanteenNewsRepository) GetByCanteen(ctx context.Context, canteenID stri
 	}
 	defer rows.Close()
 
-	var out []model.CanteenNews
+	out := make([]model.CanteenNews, 0)
 	for rows.Next() {
 		var n model.CanteenNews
-		if err := rows.Scan(
-			&n.ID,
-			&n.CanteenID,
-			&n.AdminID,
-			&n.Title,
-			&n.Content,
-			&n.Price,
-			&n.CreatedAt,
-		); err != nil {
+		if err := rows.Scan(&n.ID, &n.CanteenID, &n.AdminID, &n.Title, &n.Content, &n.Price, &n.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, n)
@@ -56,7 +49,7 @@ func (r *CanteenNewsRepository) GetByCanteen(ctx context.Context, canteenID stri
 }
 
 func (r *CanteenNewsRepository) Update(ctx context.Context, id int64, title, content, price *string) error {
-	_, err := r.db.ExecContext(ctx, `
+	res, err := r.db.ExecContext(ctx, `
 		UPDATE canteen_news
 		SET
 		  title   = COALESCE($2, title),
@@ -64,11 +57,33 @@ func (r *CanteenNewsRepository) Update(ctx context.Context, id int64, title, con
 		  price   = COALESCE($4, price)
 		WHERE id = $1
 	`, id, title, content, price)
-	return err
+	if err != nil {
+		return err
+	}
+	aff, _ := res.RowsAffected()
+	if aff == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (r *CanteenNewsRepository) Delete(ctx context.Context, id int64) error {
-	_, err := r.db.ExecContext(ctx,
-		`DELETE FROM canteen_news WHERE id=$1`, id)
+	res, err := r.db.ExecContext(ctx, `DELETE FROM canteen_news WHERE id=$1`, id)
+	if err != nil {
+		return err
+	}
+	aff, _ := res.RowsAffected()
+	if aff == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *CanteenNewsRepository) EnsureCanteenExists(ctx context.Context, canteenID string) error {
+	var x string
+	err := r.db.QueryRowContext(ctx, `SELECT id FROM canteens WHERE id=$1`, canteenID).Scan(&x)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
 	return err
 }

@@ -14,5 +14,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
 	app.Run(db)
 }
