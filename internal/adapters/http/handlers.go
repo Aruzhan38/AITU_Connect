@@ -30,6 +30,10 @@ func (h *Handler) CanteenNewsPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "canteen_news.tmpl", nil)
 }
 
+func (h *Handler) AdminPage(w http.ResponseWriter, r *http.Request) {
+	render(w, "admin.tmpl", nil)
+}
+
 type Handler struct {
 	canteenUC *usecase.CanteenUsecase
 	authUC    *usecase.AuthUsecase
@@ -232,12 +236,22 @@ type authReq struct {
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
-	id, _ := UserIDFromContext(r.Context())
-	role, _ := RoleFromContext(r.Context())
+	id, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-	json.NewEncoder(w).Encode(map[string]any{
-		"user_id": id,
-		"role":    role,
+	u, err := h.authUC.Me(r.Context(), id)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"user_id": u.ID,
+		"email":   u.Email,
+		"role":    u.Role,
 	})
 }
 

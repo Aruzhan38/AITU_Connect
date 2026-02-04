@@ -1,12 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("aitu-token");
     const createPostArea = document.getElementById("createPostArea");
     const postForm = document.getElementById("postForm");
     const feedContainer = document.getElementById("feedContainer");
 
-    if (token) {
-        createPostArea.classList.remove("d-none");
-    }
+    const role = localStorage.getItem("aitu_role");
+    const canCreate = ["admin","moderator","teacher","rector","club_leader"].includes(role);
+    if (canCreate) createPostArea.classList.remove("d-none");
 
     postForm?.addEventListener("submit", async (e) => {
         e.preventDefault();

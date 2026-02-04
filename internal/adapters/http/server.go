@@ -29,17 +29,19 @@ func NewServer(h *Handler) *http.Server {
 		} // только админы
 
 		AuthMiddleware(h.authUC)(
-			RequireRoles("staff", "admin")(http.HandlerFunc(h.CanteensSubrouter)),
+			RequireRoles("admin", "moderator", "teacher", "rector", "club_leader")(http.HandlerFunc(h.CanteensSubrouter)),
 		).ServeHTTP(w, r)
 	})) // защита пост онли рид
 
 	mux.Handle("/api/news/",
 		AuthMiddleware(h.authUC)(
-			RequireRoles("staff", "admin")(http.HandlerFunc(h.NewsByID)),
+			RequireRoles("admin", "moderator")(http.HandlerFunc(h.NewsByID)),
 		),
 	) //пэтч или удалить
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/static"))))
+
+	mux.HandleFunc("/admin", h.AdminPage)
 
 	return &http.Server{
 		Addr:    ":8080",

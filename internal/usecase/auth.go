@@ -123,3 +123,12 @@ func (a *AuthUsecase) issueToken(userID int64, role string) (string, error) {
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(a.jwtSecret)
 }
+
+func (a *AuthUsecase) Me(ctx context.Context, userID int64) (model.User, error) {
+	u, err := a.users.GetByID(ctx, userID)
+	if err != nil {
+		return model.User{}, err
+	}
+	u.PasswordHash = ""
+	return u, nil
+}

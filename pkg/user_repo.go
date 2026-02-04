@@ -40,3 +40,17 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (model.Us
 	}
 	return u, err
 }
+
+func (r *UserRepository) GetByID(ctx context.Context, id int64) (model.User, error) {
+	var u model.User
+	err := r.db.QueryRowContext(ctx, `
+		SELECT id, email, password_hash, role, created_at
+		FROM users
+		WHERE id = $1
+	`, id).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.Role, &u.CreatedAt)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return model.User{}, ErrNotFound
+	}
+	return u, err
+}

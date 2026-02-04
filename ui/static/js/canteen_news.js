@@ -4,8 +4,9 @@ function getCanteenIdFromPath() {
 }
 
 function token() {
-    return localStorage.getItem("token") || "";
+    return localStorage.getItem("aitu-token") || "";
 }
+
 
 async function fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
@@ -97,7 +98,7 @@ async function checkRoleAndShowCreate() {
     if (!res.ok) return;
 
     const role = json?.role;
-    if (role === "admin" || role === "staff") {
+    if (["admin","moderator","teacher","rector"].includes(role)) {
         box.classList.remove("d-none");
     }
 }
