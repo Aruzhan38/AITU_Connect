@@ -7,6 +7,8 @@ function token() {
     return localStorage.getItem("aitu-token") || "";
 }
 
+let currentUserRole = null;
+
 
 async function fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
@@ -42,7 +44,29 @@ async function loadCanteenHeader(canteenID) {
     }
 }
 
-async function loadNews(canteenID) {
+async function deleteNews(newsID, canteenID) {
+    if (!confirm("Delete this update?")) return;
+    
+    const t = token();
+    if (!t) {
+        alert("Please login first.");
+        return;
+    }
+
+    const { res, text } = await fetchJSON(`/api/news/${newsID}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${t}` },
+    });
+
+    if (!res.ok) {
+        alert(`Error: ${text}`);
+        return;
+    }
+
+    await loadNews(canteenID, currentUserRole);
+}
+
+async function loadNews(canteenID, userRole) {
     const { res, json, text } = await fetchJSON(`/api/canteens/${canteenID}/news`);
     if (!res.ok) {
         console.error("news error:", text);
@@ -60,6 +84,8 @@ async function loadNews(canteenID) {
     }
     empty.classList.add("d-none");
 
+    const isAdmin = userRole === "admin";
+
     data.forEach((n) => {
         const card = document.createElement("div");
         card.className = "card shadow-sm";
@@ -74,11 +100,18 @@ async function loadNews(canteenID) {
             <h5 class="fw-bold mb-1">${escapeHtml(n.title)}</h5>
             <div class="text-muted small mb-2">${escapeHtml(created)}</div>
           </div>
-          ${
-            priceLabel
-                ? `<span class="badge text-bg-primary">${escapeHtml(priceLabel)}</span>`
-                : ""
-        }
+          <div class="d-flex gap-2 align-items-start">
+            ${
+              priceLabel
+                  ? `<span class="badge text-bg-primary">${escapeHtml(priceLabel)}</span>`
+                  : ""
+            }
+            ${
+              isAdmin
+                  ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteNews(${n.id}, '${canteenID}')">×</button>`
+                  : ""
+            }
+          </div>
         </div>
         <p class="mb-0">${escapeHtml(n.content)}</p>
       </div>
@@ -87,20 +120,21 @@ async function loadNews(canteenID) {
     });
 }
 
-async function checkRoleAndShowCreate() {
+async function checkRoleAndShowCreate(canteenID) {
     const t = token();
     const box = document.getElementById("createBox");
-    if (!t) return;
+    if (!t) return null;
 
     const { res, json } = await fetchJSON("/me", {
         headers: { Authorization: `Bearer ${t}` },
     });
-    if (!res.ok) return;
+    if (!res.ok) return null;
 
     const role = json?.role;
-    if (["admin","moderator","teacher","rector"].includes(role)) {
+    if (["admin","moderator","staff"].includes(role)) {
         box.classList.remove("d-none");
     }
+    return role;
 }
 
 async function setupCreateForm(canteenID) {
@@ -143,7 +177,7 @@ async function setupCreateForm(canteenID) {
 
         form.reset();
         msg.textContent = "Published";
-        await loadNews(canteenID);
+        await loadNews(canteenID, currentUserRole);
     });
 }
 
@@ -162,7 +196,7 @@ function escapeHtml(s) {
     if (!canteenID) return;
 
     await loadCanteenHeader(canteenID);
-    await loadNews(canteenID);
-    await checkRoleAndShowCreate();
+    currentUserRole = await checkRoleAndShowCreate(canteenID);
+    await loadNews(canteenID, currentUserRole);
     await setupCreateForm(canteenID);
 })();

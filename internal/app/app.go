@@ -17,7 +17,7 @@ func Run(db *sql.DB) {
 	canteenUC := usecase.NewCanteenUsecase(canteenRepo, newsRepo)
 	authUC := usecase.NewAuthUsecase(userRepo, "super_secret_key")
 	postUC := usecase.NewPostUsecase(postRepo)
-	handler := http.NewHandler(canteenUC, authUC, postUC)
+	handler := http.NewHandler(canteenUC, authUC, postUC, userRepo)
 
 	server := http.NewServer(handler)
 

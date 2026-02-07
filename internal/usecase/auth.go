@@ -5,15 +5,17 @@ import (
 	"AITU_Connect/pkg"
 	"context"
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrEmailInvalid       = errors.New("email invalid")
+	ErrEmailDomain        = errors.New("only @aitu.kz emails allowed")
 	ErrPasswordWeak       = errors.New("password too short")
 	ErrEmailTaken         = errors.New("email already taken")
 	ErrTokenInvalid       = errors.New("token invalid")
@@ -30,62 +32,78 @@ func NewAuthUsecase(users *pkg.UserRepository, jwtSecret string) *AuthUsecase {
 	return &AuthUsecase{
 		users:     users,
 		jwtSecret: []byte(jwtSecret),
-		tokenTTL:  24 * time.Hour,
+		tokenTTL:  60 * time.Minute,
 	}
 }
 
-func (a *AuthUsecase) Register(ctx context.Context, email, password string) (model.User, string, error) {
+func (a *AuthUsecase) Register(ctx context.Context, email, password string) (model.User, string, time.Time, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
 	if !strings.Contains(email, "@") {
-		return model.User{}, "", ErrEmailInvalid
+		return model.User{}, "", time.Time{}, ErrEmailInvalid
+	}
+	if !strings.HasSuffix(email, "@aitu.kz") {
+		return model.User{}, "", time.Time{}, ErrEmailDomain
 	}
 	if len(password) < 6 {
-		return model.User{}, "", ErrPasswordWeak
+		return model.User{}, "", time.Time{}, ErrPasswordWeak
 	}
 
 	if _, err := a.users.GetByEmail(ctx, email); err == nil {
-		return model.User{}, "", ErrEmailTaken
+		return model.User{}, "", time.Time{}, ErrEmailTaken
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return model.User{}, "", err
+		return model.User{}, "", time.Time{}, err
 	}
 
 	role := "student"
 	u, err := a.users.Create(ctx, email, string(hash), role)
 	if !model.AllowedRoles[role] {
-		return model.User{}, "", ErrInvalidRole
+		return model.User{}, "", time.Time{}, ErrInvalidRole
 	}
 
 	token, err := a.issueToken(u.ID, u.Role)
+	expiry := time.Now().Add(a.tokenTTL)
+	if err := a.users.UpdateToken(ctx, u.ID, token, expiry); err != nil {
+		return model.User{}, "", time.Time{}, err
+	}
+
 	if err != nil {
-		return model.User{}, "", err
+		return model.User{}, "", time.Time{}, err
 	}
 
 	u.PasswordHash = ""
-	return u, token, nil
+	return u, token, expiry, nil
 }
 
-func (a *AuthUsecase) Login(ctx context.Context, email, password string) (model.User, string, error) {
+func (a *AuthUsecase) Login(ctx context.Context, email, password string) (model.User, string, time.Time, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
+	if !strings.HasSuffix(email, "@aitu.kz") {
+		return model.User{}, "", time.Time{}, ErrEmailDomain
+	}
 
 	u, err := a.users.GetByEmail(ctx, email)
 	if err != nil {
-		return model.User{}, "", ErrInvalidCredentials
+		return model.User{}, "", time.Time{}, ErrInvalidCredentials
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) != nil {
-		return model.User{}, "", ErrInvalidCredentials
+		return model.User{}, "", time.Time{}, ErrInvalidCredentials
 	}
 
 	token, err := a.issueToken(u.ID, u.Role)
 	if err != nil {
-		return model.User{}, "", err
+		return model.User{}, "", time.Time{}, err
+	}
+
+	expiry := time.Now().Add(a.tokenTTL)
+	if err := a.users.UpdateToken(ctx, u.ID, token, expiry); err != nil {
+		return model.User{}, "", time.Time{}, err
 	}
 
 	u.PasswordHash = ""
-	return u, token, nil
+	return u, token, expiry, nil
 }
 
 func (a *AuthUsecase) VerifyToken(tokenStr string) (int64, string, error) {

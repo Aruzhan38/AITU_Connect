@@ -34,17 +34,23 @@ func (h *Handler) AdminPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "admin.tmpl", nil)
 }
 
+func (h *Handler) ModeratorPage(w http.ResponseWriter, r *http.Request) {
+	render(w, "moderator.tmpl", nil)
+}
+
 type Handler struct {
 	canteenUC *usecase.CanteenUsecase
 	authUC    *usecase.AuthUsecase
 	postUC    *usecase.PostUsecase
+	users     *pkg.UserRepository
 }
 
-func NewHandler(canteenUC *usecase.CanteenUsecase, authUC *usecase.AuthUsecase, postUC *usecase.PostUsecase) *Handler {
+func NewHandler(canteenUC *usecase.CanteenUsecase, authUC *usecase.AuthUsecase, postUC *usecase.PostUsecase, users *pkg.UserRepository) *Handler {
 	return &Handler{
 		canteenUC: canteenUC,
 		authUC:    authUC,
 		postUC:    postUC,
+		users:     users,
 	}
 }
 
@@ -248,10 +254,16 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token := ""
+	if u.Token != nil {
+		token = *u.Token
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"user_id": u.ID,
 		"email":   u.Email,
 		"role":    u.Role,
+		"token":   token,
 	})
 }
 
@@ -262,13 +274,13 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, token, err := h.authUC.Register(r.Context(), req.Email, req.Password)
+	u, token, expiry, err := h.authUC.Register(r.Context(), req.Email, req.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token})
+	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token, "token_expiry": expiry.Unix()})
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -278,13 +290,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, token, err := h.authUC.Login(r.Context(), req.Email, req.Password)
+	u, token, expiry, err := h.authUC.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		http.Error(w, "invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token})
+	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token, "token_expiry": expiry.Unix()})
 }
 
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
@@ -325,4 +337,140 @@ func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
+}
+
+func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	role, ok := RoleFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/posts/")
+	idStr = strings.Trim(idStr, "/")
+	postID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || postID <= 0 {
+		http.Error(w, "invalid post id", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := h.postUC.GetFeed(r.Context())
+	if err != nil {
+		http.Error(w, "error fetching posts", http.StatusInternalServerError)
+		return
+	}
+
+	var post *model.Post
+	for i := range posts {
+		if posts[i].ID == postID {
+			post = &posts[i]
+			break
+		}
+	}
+
+	if post == nil {
+		http.Error(w, "post not found", http.StatusNotFound)
+		return
+	}
+
+	if post.AuthorID != userID && role != "admin" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
+	role, ok := RoleFromContext(r.Context())
+	if !ok || role == "" {
+		http.Error(w, "role not found in context", http.StatusForbidden)
+		return
+	}
+
+	users, err := h.users.GetAll(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	if users == nil {
+		users = make([]model.User, 0)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(users)
+}
+
+func (h *Handler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		UserID int64  `json:"user_id"`
+		Role   string `json:"role"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	if req.UserID == 0 || req.Role == "" {
+		http.Error(w, "user_id and role are required", http.StatusBadRequest)
+		return
+	}
+
+	if !model.AllowedRoles[req.Role] {
+		http.Error(w, "invalid role", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.users.UpdateUserRole(r.Context(), req.UserID, req.Role); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
+	users, err := h.users.GetAll(r.Context())
+	if err != nil {
+		http.Error(w, "failed to get users", http.StatusInternalServerError)
+		return
+	}
+	userCount := len(users)
+
+	posts, err := h.postUC.GetFeed(r.Context())
+	if err != nil {
+		http.Error(w, "failed to get posts", http.StatusInternalServerError)
+		return
+	}
+	postCount := len(posts)
+
+	canteens, err := h.canteenUC.GetCanteens(r.Context())
+	if err != nil {
+		http.Error(w, "failed to get canteens", http.StatusInternalServerError)
+		return
+	}
+	canteenCount := len(canteens)
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"users":    userCount,
+		"posts":    postCount,
+		"canteens": canteenCount,
+	})
 }

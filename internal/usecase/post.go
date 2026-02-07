@@ -21,3 +21,7 @@ func (u *PostUsecase) CreatePost(ctx context.Context, p model.Post) (int64, erro
 func (u *PostUsecase) GetFeed(ctx context.Context) ([]model.Post, error) {
 	return u.repo.GetAll(ctx)
 }
+
+func (u *PostUsecase) DeletePost(ctx context.Context, postID int64) error {
+	return u.repo.Delete(ctx, postID)
+}
