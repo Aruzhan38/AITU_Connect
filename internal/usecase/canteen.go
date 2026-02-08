@@ -62,17 +62,11 @@ func (u *CanteenUsecase) CreateNews(ctx context.Context, news model.CanteenNews)
 	}
 
 	id, err := u.newsRepo.Create(ctx, news)
-	if err == nil {
-		select {
-		case u.events <- "news created for canteen " + news.CanteenID:
-		default:
-		}
-	}
 	return id, err
 }
 
-func (u *CanteenUsecase) UpdateNews(ctx context.Context, id int64, title, content, price *string) error {
-	return u.newsRepo.Update(ctx, id, title, content, price)
+func (u *CanteenUsecase) UpdateNews(ctx context.Context, id int64, title, content, price, imageURL *string) error {
+	return u.newsRepo.Update(ctx, id, title, content, price, imageURL)
 }
 
 func (u *CanteenUsecase) DeleteNews(ctx context.Context, id int64) error {

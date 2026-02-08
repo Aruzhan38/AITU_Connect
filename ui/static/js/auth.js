@@ -22,7 +22,9 @@ function hideAlert() {
 function setToken(token) {
     localStorage.setItem(TOKEN_KEY, token);
 }
+
 function setExpiry(ts) {
+    // ts = unix seconds
     localStorage.setItem(EXPIRY_KEY, String(ts));
 }
 
@@ -34,35 +36,45 @@ function getExpiry() {
 }
 
 let _logoutTimer = null;
-function scheduleAutoLogout() {
-    const ts = getExpiry();
-    if (!ts) return;
-    const ms = ts * 1000 - Date.now();
-    if (ms <= 0) {
-        clearAuth();
-        window.location.href = '/login';
-        return;
-    }
-    if (_logoutTimer) clearTimeout(_logoutTimer);
-    _logoutTimer = setTimeout(() => {
-        clearAuth();
-        window.location.href = '/login';
-    }, ms);
-}
 
 function clearAuth() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(ROLE_KEY);
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem(EXPIRY_KEY);
+    localStorage.removeItem(USER_ID_KEY);
     if (_logoutTimer) {
         clearTimeout(_logoutTimer);
         _logoutTimer = null;
     }
 }
 
-function isAdminOrModerator(role) {
-    return ["admin", "moderator"].includes(role);
+function getJwtExp(token) {
+    try {
+        const payload = token.split(".")[1];
+        const json = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+        return typeof json.exp === "number" ? json.exp : null;
+    } catch {
+        return null;
+    }
+}
+
+function scheduleAutoLogout() {
+    const ts = getExpiry();
+    if (!ts) return;
+
+    const ms = ts * 1000 - Date.now();
+    if (ms <= 0) {
+        clearAuth();
+        window.location.href = "/login";
+        return;
+    }
+    if (_logoutTimer) clearTimeout(_logoutTimer);
+
+    _logoutTimer = setTimeout(() => {
+        clearAuth();
+        window.location.href = "/login";
+    }, ms);
 }
 
 async function apiPost(url, body) {
@@ -98,37 +110,40 @@ async function apiGetMe() {
     });
 
     if (!res.ok) return null;
-
     try { return await res.json(); } catch { return null; }
 }
 
 async function afterAuthSuccess(out) {
-    if (out?.token) setToken(out.token);
-    if (out?.token_expiry) setExpiry(out.token_expiry);
+    const tok = out?.token;
+    if (tok) {
+        setToken(tok);
 
-    if (out?.user?.email) localStorage.setItem(EMAIL_KEY, out.user.email);
-    if (out?.user?.role) localStorage.setItem(ROLE_KEY, out.user.role);
-    if (out?.user?.id) localStorage.setItem(USER_ID_KEY, out.user.id);
+        const exp = getJwtExp(tok);
+        if (exp) setExpiry(exp);
+    }
+
+    const outEmail = out?.user?.email || "";
+    const outRole = out?.user?.role || "";
+    const outUserId = out?.user?.id || "";
+
+    if (outEmail) localStorage.setItem(EMAIL_KEY, outEmail);
+    if (outRole) localStorage.setItem(ROLE_KEY, outRole);
+    if (outUserId) localStorage.setItem(USER_ID_KEY, outUserId);
 
     const me = await apiGetMe();
-
-    const role = me?.role || out?.user?.role || localStorage.getItem(ROLE_KEY) || "";
-    const email = me?.email || out?.user?.email || localStorage.getItem(EMAIL_KEY) || "";
-    const userId = me?.user_id || out?.user?.id || localStorage.getItem(USER_ID_KEY) || "";
+    const role = me?.role || outRole || localStorage.getItem(ROLE_KEY) || "";
+    const userId = me?.user_id || outUserId || localStorage.getItem(USER_ID_KEY) || "";
+    const email = outEmail || localStorage.getItem(EMAIL_KEY) || "";
 
     if (role) localStorage.setItem(ROLE_KEY, role);
-    if (email) localStorage.setItem(EMAIL_KEY, email);
     if (userId) localStorage.setItem(USER_ID_KEY, userId);
+    if (email) localStorage.setItem(EMAIL_KEY, email);
 
     scheduleAutoLogout();
 
-    if (role === "admin") {
-        window.location.href = "/admin";
-    } else if (role === "moderator") {
-        window.location.href = "/moderator";
-    } else {
-        window.location.href = "/feed";
-    }
+    if (role === "admin") window.location.href = "/admin";
+    else if (role === "moderator") window.location.href = "/moderator";
+    else window.location.href = "/feed";
 }
 
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
@@ -143,7 +158,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 
     try {
         const out = await apiPost("/auth/login", payload);
-        showAlert("Logged in successfully", "success")
+        showAlert("Logged in successfully", "success");
         await afterAuthSuccess(out);
     } catch (err) {
         showAlert(err.message || "Login failed");
@@ -162,14 +177,14 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
 
     try {
         const out = await apiPost("/auth/register", payload);
-        showAlert("Account created successfully", "success")
+        showAlert("Account created successfully", "success");
         await afterAuthSuccess(out);
     } catch (err) {
         showAlert(err.message || "Register failed");
     }
 });
 
-(async function() {
+(async function () {
     const t = localStorage.getItem(TOKEN_KEY);
     if (!t) return;
 
@@ -178,6 +193,5 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
         clearAuth();
         return;
     }
-
     scheduleAutoLogout();
 })();

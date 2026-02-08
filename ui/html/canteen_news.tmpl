@@ -11,7 +11,6 @@
 
 <hr class="my-4"/>
 
-<!-- блок для staff/admin -->
 <div id="createBox" class="card shadow-sm mb-4 d-none">
   <div class="card-body">
     <h5 class="fw-bold mb-3">Add update / menu</h5>
@@ -25,6 +24,11 @@
       <div class="col-md-6">
         <label class="form-label">Price (optional)</label>
         <input class="form-control" name="price" placeholder="600₸" />
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Photo (optional)</label>
+        <input class="form-control" type="file" name="image" accept="image/*" />
       </div>
 
       <div class="col-12">
@@ -46,6 +50,45 @@
 
 <div id="emptyState" class="text-muted d-none">
   No updates yet.
+</div>
+
+<div class="modal fade" id="editNewsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit update</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="editMsg" class="alert d-none" role="alert"></div>
+
+        <form id="editNewsForm" class="row g-3">
+          <input type="hidden" name="id" />
+
+          <div class="col-md-6">
+            <label class="form-label">Title</label>
+            <input class="form-control" name="title" required />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Price (optional)</label>
+            <input class="form-control" name="price" placeholder="850₸" />
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Content</label>
+            <textarea class="form-control" name="content" rows="4" required></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveEditBtn">Save changes</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="/static/js/canteen_news.js"></script>

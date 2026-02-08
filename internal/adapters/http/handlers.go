@@ -18,6 +18,7 @@ func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "login.tmpl", nil)
 }
+
 func (h *Handler) CanteensPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "canteen.tmpl", nil)
 }
@@ -38,6 +39,10 @@ func (h *Handler) ModeratorPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "moderator.tmpl", nil)
 }
 
+func (h *Handler) CafeMenuPage(w http.ResponseWriter, r *http.Request) {
+	render(w, "cafe_menu.tmpl", nil)
+}
+
 type Handler struct {
 	canteenUC *usecase.CanteenUsecase
 	authUC    *usecase.AuthUsecase
@@ -45,7 +50,12 @@ type Handler struct {
 	users     *pkg.UserRepository
 }
 
-func NewHandler(canteenUC *usecase.CanteenUsecase, authUC *usecase.AuthUsecase, postUC *usecase.PostUsecase, users *pkg.UserRepository) *Handler {
+func NewHandler(
+	canteenUC *usecase.CanteenUsecase,
+	authUC *usecase.AuthUsecase,
+	postUC *usecase.PostUsecase,
+	users *pkg.UserRepository,
+) *Handler {
 	return &Handler{
 		canteenUC: canteenUC,
 		authUC:    authUC,
@@ -99,6 +109,7 @@ func (h *Handler) CanteensSubrouter(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+
 	canteenID := strings.TrimSpace(parts[0])
 	if canteenID == "" {
 		http.Error(w, "canteen_id required", http.StatusBadRequest)
@@ -140,9 +151,10 @@ func (h *Handler) createNewsForCanteen(w http.ResponseWriter, r *http.Request, c
 	}
 
 	var req struct {
-		Title   string  `json:"title"`
-		Content string  `json:"content"`
-		Price   *string `json:"price"`
+		Title    string  `json:"title"`
+		Content  string  `json:"content"`
+		Price    *string `json:"price"`
+		ImageURL *string `json:"image_url"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -152,6 +164,23 @@ func (h *Handler) createNewsForCanteen(w http.ResponseWriter, r *http.Request, c
 
 	req.Title = strings.TrimSpace(req.Title)
 	req.Content = strings.TrimSpace(req.Content)
+	if req.Price != nil {
+		p := strings.TrimSpace(*req.Price)
+		if p == "" {
+			req.Price = nil
+		} else {
+			req.Price = &p
+		}
+	}
+	if req.ImageURL != nil {
+		u := strings.TrimSpace(*req.ImageURL)
+		if u == "" {
+			req.ImageURL = nil
+		} else {
+			req.ImageURL = &u
+		}
+	}
+
 	if req.Title == "" || req.Content == "" {
 		http.Error(w, "title and content are required", http.StatusBadRequest)
 		return
@@ -163,6 +192,7 @@ func (h *Handler) createNewsForCanteen(w http.ResponseWriter, r *http.Request, c
 		Title:     req.Title,
 		Content:   req.Content,
 		Price:     req.Price,
+		ImageURL:  req.ImageURL,
 	})
 	if err != nil {
 		if errors.Is(err, pkg.ErrNotFound) {
@@ -188,29 +218,33 @@ func (h *Handler) NewsByID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPatch:
 		var req struct {
-			Title   *string `json:"title"`
-			Content *string `json:"content"`
-			Price   *string `json:"price"`
+			Title    *string `json:"title"`
+			Content  *string `json:"content"`
+			Price    *string `json:"price"`
+			ImageURL *string `json:"image_url"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "invalid json", http.StatusBadRequest)
 			return
 		}
 
-		if req.Title != nil {
-			t := strings.TrimSpace(*req.Title)
-			req.Title = &t
+		trim := func(p **string) {
+			if *p == nil {
+				return
+			}
+			t := strings.TrimSpace(**p)
+			if t == "" {
+				*p = nil
+				return
+			}
+			*p = &t
 		}
-		if req.Content != nil {
-			c := strings.TrimSpace(*req.Content)
-			req.Content = &c
-		}
-		if req.Price != nil {
-			p := strings.TrimSpace(*req.Price)
-			req.Price = &p
-		}
+		trim(&req.Title)
+		trim(&req.Content)
+		trim(&req.Price)
+		trim(&req.ImageURL)
 
-		if err := h.canteenUC.UpdateNews(r.Context(), id, req.Title, req.Content, req.Price); err != nil {
+		if err := h.canteenUC.UpdateNews(r.Context(), id, req.Title, req.Content, req.Price, req.ImageURL); err != nil {
 			if errors.Is(err, pkg.ErrNotFound) {
 				http.Error(w, "not found", http.StatusNotFound)
 				return
@@ -280,7 +314,11 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token, "token_expiry": expiry.Unix()})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"user":         u,
+		"token":        token,
+		"token_expiry": expiry.Unix(),
+	})
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -296,13 +334,17 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]any{"user": u, "token": token, "token_expiry": expiry.Unix()})
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"user":         u,
+		"token":        token,
+		"token_expiry": expiry.Unix(),
+	})
 }
 
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	userID, ok := UserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", 401)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -311,7 +353,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		Content string `json:"content"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid json", 400)
+		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
 
@@ -321,22 +363,20 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		Content:  req.Content,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	writeJSON(w, http.StatusCreated, map[string]int64{"id": id})
 }
 
 func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.postUC.GetFeed(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	writeJSON(w, http.StatusOK, posts)
 }
 
 func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
@@ -378,20 +418,43 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "post not found", http.StatusNotFound)
 		return
 	}
+	if role == "admin" {
+		if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if post.AuthorID == userID {
+		if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if role == "moderator" {
+		author, err := h.users.GetByID(r.Context(), post.AuthorID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if strings.ToLower(author.Role) == "admin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 
-	if post.AuthorID != userID && role != "admin" {
-		http.Error(w, "forbidden", http.StatusForbidden)
+		if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	http.Error(w, "forbidden", http.StatusForbidden)
 }
-
 func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	role, ok := RoleFromContext(r.Context())
 	if !ok || role == "" {
@@ -401,14 +464,13 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := h.users.GetAll(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if users == nil {
 		users = make([]model.User, 0)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	writeJSON(w, http.StatusOK, users)
 }
 
 func (h *Handler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
@@ -438,12 +500,11 @@ func (h *Handler) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.users.UpdateUserRole(r.Context(), req.UserID, req.Role); err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {

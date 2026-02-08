@@ -18,16 +18,16 @@ func NewCanteenNewsRepository(db *sql.DB) *CanteenNewsRepository {
 func (r *CanteenNewsRepository) Create(ctx context.Context, n model.CanteenNews) (int64, error) {
 	var id int64
 	err := r.db.QueryRowContext(ctx, `
-		INSERT INTO canteen_news (canteen_id, admin_id, title, content, price)
-		VALUES ($1,$2,$3,$4,$5)
+		INSERT INTO canteen_news (canteen_id, admin_id, title, content, price, image_url)
+		VALUES ($1,$2,$3,$4,$5,$6)
 		RETURNING id
-	`, n.CanteenID, n.AdminID, n.Title, n.Content, n.Price).Scan(&id)
+	`, n.CanteenID, n.AdminID, n.Title, n.Content, n.Price, n.ImageURL).Scan(&id)
 	return id, err
 }
 
 func (r *CanteenNewsRepository) GetByCanteen(ctx context.Context, canteenID string) ([]model.CanteenNews, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, canteen_id, admin_id, title, content, price, created_at
+		SELECT id, canteen_id, admin_id, title, content, price, image_url, created_at
 		FROM canteen_news
 		WHERE canteen_id = $1
 		ORDER BY created_at DESC
@@ -40,7 +40,7 @@ func (r *CanteenNewsRepository) GetByCanteen(ctx context.Context, canteenID stri
 	out := make([]model.CanteenNews, 0)
 	for rows.Next() {
 		var n model.CanteenNews
-		if err := rows.Scan(&n.ID, &n.CanteenID, &n.AdminID, &n.Title, &n.Content, &n.Price, &n.CreatedAt); err != nil {
+		if err := rows.Scan(&n.ID, &n.CanteenID, &n.AdminID, &n.Title, &n.Content, &n.Price, &n.ImageURL, &n.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, n)
@@ -48,15 +48,16 @@ func (r *CanteenNewsRepository) GetByCanteen(ctx context.Context, canteenID stri
 	return out, rows.Err()
 }
 
-func (r *CanteenNewsRepository) Update(ctx context.Context, id int64, title, content, price *string) error {
+func (r *CanteenNewsRepository) Update(ctx context.Context, id int64, title, content, price *string, imageURL *string) error {
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE canteen_news
 		SET
 		  title   = COALESCE($2, title),
 		  content = COALESCE($3, content),
-		  price   = COALESCE($4, price)
+		  price   = COALESCE($4, price),
+		  image_url = COALESCE($5, image_url)
 		WHERE id = $1
-	`, id, title, content, price)
+	`, id, title, content, price, imageURL)
 	if err != nil {
 		return err
 	}

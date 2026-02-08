@@ -1,33 +1,44 @@
 {{define "title"}}AITU Connect — Home{{end}}
+{{define "body_class"}}home-page{{end}}
 
 {{define "content"}}
-<section class="hero">
-  <h1>Welcome to AITU Connect</h1>
-  <p class="muted">
-    Unified campus platform with role-based access.
-  </p>
+<section class="py-5">
+  <h1 class="display-4 fw-bold mb-3">Welcome to AITU Connect</h1>
+  <p class="text-muted fs-5 mb-4">Unified campus platform with role-based access.</p>
 
-  <div class="hero-actions">
-    <a href="/login" id="homeSignInBtn" class="btn">Sign in</a>
-    <a href="/canteens" class="btn ghost">View canteens</a>
-  </div>
-</section>
-
-<section class="grid">
-  <div class="card">
-    <h2>Canteens</h2>
-    <p class="muted">All campus canteens and locations.</p>
+  <div class="d-flex gap-3 mb-5">
+    <a href="/login" class="btn btn-primary btn-lg px-4">Sign in</a>
+    <a href="/canteens" class="btn btn-light btn-lg px-4">View canteens</a>
   </div>
 
-  <div class="card">
-    <h2>News</h2>
-    <p class="muted">Publish updates with role-based permissions.</p>
-  </div>
+  <div class="row g-4">
+    <div class="col-12 col-md-4">
+      <div class="card shadow-sm border-0 rounded-4 h-100">
+        <div class="card-body p-4">
+          <h2 class="h3 fw-bold mb-2">Canteens</h2>
+          <p class="text-muted mb-0">All campus canteens and locations.</p>
+        </div>
+      </div>
+    </div>
 
-  <div class="card">
-    <h2>Security</h2>
-    <p class="muted">JWT authentication and RBAC.</p>
-    <span class="tag">JWT • bcrypt • roles</span>
+    <div class="col-12 col-md-4">
+      <div class="card shadow-sm border-0 rounded-4 h-100">
+        <div class="card-body p-4">
+          <h2 class="h3 fw-bold mb-2">News</h2>
+          <p class="text-muted mb-0">Publish updates with role-based permissions.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <div class="card shadow-sm border-0 rounded-4 h-100">
+        <div class="card-body p-4">
+          <h2 class="h3 fw-bold mb-2">Security</h2>
+          <p class="text-muted mb-3">JWT authentication and RBAC.</p>
+          <span class="badge rounded-pill text-bg-light px-3 py-2">JWT • bcrypt • roles</span>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 {{end}}

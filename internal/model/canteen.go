@@ -15,5 +15,6 @@ type CanteenNews struct {
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	Price     *string   `json:"price,omitempty"`
+	ImageURL  *string   `json:"image_url,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }

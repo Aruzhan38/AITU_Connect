@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-var ErrNotFound = errors.New("not found")
-
 type UserRepository struct {
 	db *sql.DB
 }

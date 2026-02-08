@@ -10,25 +10,24 @@ function $(id) {
 function getToken() {
     return localStorage.getItem(TOKEN_KEY) || "";
 }
+function getRole() {
+    return localStorage.getItem(ROLE_KEY) || "";
+}
+function getEmail() {
+    return localStorage.getItem(EMAIL_KEY) || "";
+}
 
 function setToken(t) {
     if (t) localStorage.setItem(TOKEN_KEY, t);
 }
-
 function setRole(role) {
     if (role) localStorage.setItem(ROLE_KEY, role);
 }
-
 function setEmail(email) {
     if (email) localStorage.setItem(EMAIL_KEY, email);
 }
-
-function getRole() {
-    return localStorage.getItem(ROLE_KEY) || "";
-}
-
-function getEmail() {
-    return localStorage.getItem(EMAIL_KEY) || "";
+function setUserId(id) {
+    if (id != null) localStorage.setItem(USER_ID_KEY, String(id));
 }
 
 function clearAuth() {
@@ -36,10 +35,6 @@ function clearAuth() {
     localStorage.removeItem(ROLE_KEY);
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem(USER_ID_KEY);
-}
-
-function isStaff(role) {
-    return ["admin", "moderator", "staff", "club_leader"].includes(role);
 }
 
 async function fetchMe() {
@@ -51,7 +46,6 @@ async function fetchMe() {
     });
 
     if (!res.ok) return null;
-
     try {
         return await res.json();
     } catch {
@@ -64,7 +58,6 @@ function setNavbarLoggedOut() {
     $("navUser")?.classList.add("d-none");
     $("navAdmin")?.classList.add("d-none");
     $("navModerator")?.classList.add("d-none");
-    $("homeSignInBtn")?.classList.remove("d-none");
 
     const label = $("navUserLabel");
     if (label) label.textContent = "Account";
@@ -73,23 +66,20 @@ function setNavbarLoggedOut() {
 function setNavbarLoggedIn(role, email) {
     $("navLogin")?.classList.add("d-none");
     $("navUser")?.classList.remove("d-none");
-    $("homeSignInBtn")?.classList.add("d-none");
 
     const label = $("navUserLabel");
     if (label) {
-        const left = email || getEmail();
-        label.textContent = left ? `${left} (${role})` : `(${role})`;
+        const safeEmail = email || getEmail();
+        label.textContent = safeEmail ? `${safeEmail} (${role})` : `(${role})`;
     }
 
     if (role === "admin") {
         $("navAdmin")?.classList.remove("d-none");
         $("navModerator")?.classList.add("d-none");
-    }
-    else if (role === "moderator") {
+    } else if (role === "moderator") {
         $("navModerator")?.classList.remove("d-none");
         $("navAdmin")?.classList.add("d-none");
-    }
-    else {
+    } else {
         $("navAdmin")?.classList.add("d-none");
         $("navModerator")?.classList.add("d-none");
     }
@@ -105,35 +95,31 @@ function bindOnce(el, event, handler) {
 
 async function initNavbar() {
     const token = getToken();
-    const role = getRole();
-    const email = getEmail();
-    
-    if (token && role && email) {
-        setNavbarLoggedIn(role, email);
-        
-        const me = await fetchMe();
-        if (me && me.role) {
-            setRole(me.role);
-            setEmail(me.email);
-            setNavbarLoggedIn(me.role, me.email);
-        }
-    } else if (!token) {
+
+    if (!token) {
         setNavbarLoggedOut();
         return;
-    } else {
-        const me = await fetchMe();
-
-        if (!me || !me.role) {
-            clearAuth();
-            setNavbarLoggedOut();
-            return;
-        }
-
-        setRole(me.role);
-        if (me.email) setEmail(me.email);
-
-        setNavbarLoggedIn(me.role, me.email);
     }
+
+    const cachedRole = getRole();
+    const cachedEmail = getEmail();
+    if (cachedRole) {
+        setNavbarLoggedIn(cachedRole, cachedEmail);
+    } else {
+        setNavbarLoggedIn("user", cachedEmail);
+    }
+
+    const me = await fetchMe();
+    if (!me || !me.role) {
+        clearAuth();
+        setNavbarLoggedOut();
+        return;
+    }
+
+    setRole(me.role);
+    if (me.user_id != null) setUserId(me.user_id);
+
+    setNavbarLoggedIn(me.role, getEmail());
 
     bindOnce($("navLogout"), "click", (e) => {
         e.preventDefault();
@@ -162,28 +148,29 @@ window.AITU_AUTH = {
     setEmail,
     clearAuth,
     fetchMe,
-    isStaff,
 };
 
-(async function protectPages() {
+document.addEventListener("DOMContentLoaded", async () => {
     const path = window.location.pathname;
-    const role = getRole();
+
+    if (path === "/login") return;
+
+    const token = getToken();
+    if (!token) return;
+    let role = getRole();
+    const me = await fetchMe();
+    if (me?.role) {
+        role = me.role;
+        setRole(role);
+    }
 
     if (path === "/admin" && role !== "admin") {
-        if (role === "moderator") {
-            window.location.href = "/moderator";
-        } else {
-            window.location.href = "/feed";
-        }
+        window.location.href = role === "moderator" ? "/moderator" : "/feed";
         return;
     }
 
     if (path === "/moderator" && role !== "moderator") {
-        if (role === "admin") {
-            window.location.href = "/admin";
-        } else {
-            window.location.href = "/feed";
-        }
+        window.location.href = role === "admin" ? "/admin" : "/feed";
         return;
     }
-})();
+});
