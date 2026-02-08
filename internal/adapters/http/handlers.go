@@ -43,6 +43,10 @@ func (h *Handler) CafeMenuPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "cafe_menu.tmpl", nil)
 }
 
+func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) {
+	render(w, "profile.tmpl", nil)
+}
+
 type Handler struct {
 	canteenUC *usecase.CanteenUsecase
 	authUC    *usecase.AuthUsecase
@@ -288,17 +292,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := ""
-	if u.Token != nil {
-		token = *u.Token
-	}
-
-	writeJSON(w, http.StatusOK, map[string]any{
-		"user_id": u.ID,
-		"email":   u.Email,
-		"role":    u.Role,
-		"token":   token,
-	})
+	writeJSON(w, http.StatusOK, u)
 }
 
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
@@ -533,5 +527,38 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 		"users":    userCount,
 		"posts":    postCount,
 		"canteens": canteenCount,
+	})
+}
+
+func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	if !methodOnly(w, r, http.MethodPatch) {
+		return
+	}
+
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req model.User
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json format", http.StatusBadRequest)
+		return
+	}
+
+	err := h.authUC.UpdateProfile(r.Context(), userID, req)
+	if err != nil {
+		if errors.Is(err, usecase.ErrEmailTaken) || errors.Is(err, usecase.ErrEmailDomain) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"status":  "ok",
+		"message": "profile updated successfully",
 	})
 }

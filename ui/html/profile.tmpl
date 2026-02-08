@@ -1,0 +1,117 @@
+{{define "title"}}Profile Settings — AITU Connect{{end}}
+
+{{define "content"}}
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <div class="position-relative d-inline-block mx-auto mb-3">
+                    <img src="https://ui-avatars.com/api/?name=User&size=120&background=0d6efd&color=fff"
+                         id="cardAvatar" class="rounded-circle shadow-sm border border-3 border-white" alt="Avatar">
+                </div>
+                <h4 class="fw-bold mb-1" id="cardFullName">Loading...</h4>
+                <p class="text-muted small" id="cardMajor">Specialization not set</p>
+
+                <hr class="my-3 opacity-25">
+
+                <div class="text-start">
+                    <div class="mb-2">
+                        <label class="text-uppercase small fw-bold text-muted" style="font-size: 0.7rem;">Official Email</label>
+                        <div class="text-primary d-block" id="cardEmail">...</div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="text-uppercase small fw-bold text-muted" style="font-size: 0.7rem;">Account Role</label>
+                        <div><span class="badge bg-soft-primary text-primary px-3" id="cardRole">Student</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0">Personal Information</h5>
+                        <span class="badge bg-light text-dark border shadow-sm">ID: <span id="displayUserId">---</span></span>
+                    </div>
+
+                    <form id="profile-form">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">First Name</label>
+                                <input type="text" class="form-control form-control-lg bg-light border-0 shadow-none" id="name" placeholder="John">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Surname</label>
+                                <input type="text" class="form-control form-control-lg bg-light border-0 shadow-none" id="surname" placeholder="Doe">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Course</label>
+                                <select class="form-select form-select-lg bg-light border-0 shadow-none" id="course">
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold text-muted">Major / Department</label>
+                                <input type="text" class="form-control form-control-lg bg-light border-0 shadow-none" id="major" placeholder="e.g. Computer Science">
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mt-4 mb-3">University Resources & Links</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">GitHub URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-github"></i></span>
+                                <input type="url" class="form-control form-control-lg bg-light border-0 shadow-none" id="github_url" placeholder="https://github.com/your-nick">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">LMS Portal</label>
+                                <input type="url" class="form-control form-control-lg bg-light border-0 shadow-none" id="lms_url" placeholder="LMS URL">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Digital University</label>
+                                <input type="url" class="form-control form-control-lg bg-light border-0 shadow-none" id="du_url" placeholder="DU URL">
+                            </div>
+                        </div>
+
+                        <div class="alert d-none" id="form-alert"></div>
+
+                        <div class="d-flex justify-content-end pt-3 gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-lg px-4 rounded-pill fw-bold shadow-sm d-none" id="edit-btn">
+                                <i class="bi bi-pencil-square"></i> Edit Profile
+                            </button>
+
+                            <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold shadow-sm" id="save-btn">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body { background-color: #f8f9fa; }
+    .form-control:focus, .form-select:focus { background-color: #f1f3f5 !important; }
+    .bg-soft-primary { background-color: #e7f0ff; }
+    input[readonly], select[disabled] { background-color: #f8f9fa !important; cursor: default; }
+</style>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/profile.js?v={{.Now.Unix}}"></script>
+{{end}}
+
+{{template "base" .}}

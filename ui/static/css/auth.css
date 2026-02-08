@@ -1,4 +1,3 @@
-/* Переменные для стиля AITU Connect */
 :root {
   --primary: #2f6fff;
   --success: #27ae60;
@@ -12,64 +11,63 @@ body {
   color: #1a202c;
 }
 
-/* Основной контейнер */
 .container {
   max-width: 1000px;
   margin-top: 50px;
 }
 
-/* Сетка карточек */
 .row.g-4 {
   display: flex;
-  flex-wrap: wrap; /* Чтобы на мобилках падали друг под друга */
-}
+  flex-wrap: wrap;
 
-.card {
-  border: none;
-  border-radius: var(--radius);
-  height: 100%; /* Чтобы карточки были одинаковой высоты */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+  .card {
+    border: none;
+    border-radius: var(--radius);
+    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-}
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  }
 
-/* Поля ввода */
-.form-control {
-  border-radius: 10px;
-  padding: 12px 15px;
-  border: 1px solid #e2e8f0;
-}
+  .form-control {
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+  }
 
-.form-control:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(47, 111, 255, 0.1);
-}
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(47, 111, 255, 0.1);
+  }
 
-/* Кнопки */
-.btn-lg {
-  padding: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  border: none;
-}
+  .btn-lg {
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+  }
 
-.btn-primary { background-color: var(--primary); }
-.btn-success { background-color: var(--success); }
+  .btn-primary {
+    background-color: var(--primary);
+  }
 
-/* Алерт (сообщения об ошибках) */
-#alertBox {
-  border-radius: 10px;
-  margin-bottom: 20px;
-  font-weight: 500;
-}
+  .btn-success {
+    background-color: var(--success);
+  }
 
-/* Адаптивность: на экранах меньше 768px делаем в одну колонку */
-@media (max-width: 767px) {
-  .col-md-6 {
-    width: 100%;
+  #alertBox {
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 767px) {
+    .col-md-6 {
+      width: 100%;
+    }
   }
 }

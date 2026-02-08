@@ -2,45 +2,56 @@
 {{define "body_class"}}home-page{{end}}
 
 {{define "content"}}
-<section class="py-5">
-  <h1 class="display-4 fw-bold mb-3">Welcome to AITU Connect</h1>
-  <p class="text-muted fs-5 mb-4">Unified campus platform with role-based access.</p>
-
-  <div class="d-flex gap-3 mb-5">
-    <a href="/login" class="btn btn-primary btn-lg px-4">Sign in</a>
-    <a href="/canteens" class="btn btn-light btn-lg px-4">View canteens</a>
-  </div>
-
-  <div class="row g-4">
-    <div class="col-12 col-md-4">
-      <div class="card shadow-sm border-0 rounded-4 h-100">
-        <div class="card-body p-4">
-          <h2 class="h3 fw-bold mb-2">Canteens</h2>
-          <p class="text-muted mb-0">All campus canteens and locations.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-4">
-      <div class="card shadow-sm border-0 rounded-4 h-100">
-        <div class="card-body p-4">
-          <h2 class="h3 fw-bold mb-2">News</h2>
-          <p class="text-muted mb-0">Publish updates with role-based permissions.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-4">
-      <div class="card shadow-sm border-0 rounded-4 h-100">
-        <div class="card-body p-4">
-          <h2 class="h3 fw-bold mb-2">Security</h2>
-          <p class="text-muted mb-3">JWT authentication and RBAC.</p>
-          <span class="badge rounded-pill text-bg-light px-3 py-2">JWT • bcrypt • roles</span>
+<section class="mb-5">
+  <div class="hero-section shadow-lg">
+    <div class="hero-overlay">
+      <div class="hero-content text-white">
+        <h1 class="display-3 fw-bold mb-3">Good Education to Build A Better Future</h1>
+        <p class="fs-5 mb-4 opacity-90">Unified campus platform with role-based access. Discover the smart way to manage your university life at Astana IT University.</p>
+        <div class="d-flex gap-3">
+          <a href="/login" class="btn btn-primary btn-lg px-4" id="mainLoginBtn">Sign in</a>
+          <a href="/canteens" class="btn btn-outline-light btn-lg px-4">View canteens</a>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<div class="row g-4">
+  <div class="col-12 col-md-4">
+    <div class="card stat-card shadow-sm border-0 h-100">
+      <div class="card-body p-4">
+        <div class="stat-icon">🍽️</div>
+        <h2 class="h4 fw-bold mb-2">Canteens</h2>
+        <p class="text-muted mb-0 small">Explore all campus dining options, view menus, and find locations in real-time.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card stat-card shadow-sm border-0 h-100">
+      <div class="card-body p-4">
+        <div class="stat-icon">📰</div>
+        <h2 class="h4 fw-bold mb-2">News Feed</h2>
+        <p class="text-muted mb-0 small">Stay informed with the latest university announcements and student-led updates.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-4">
+    <div class="card stat-card shadow-sm border-0 h-100">
+      <div class="card-body p-4">
+        <div class="stat-icon">🔐</div>
+        <h2 class="h4 fw-bold mb-2">Security</h2>
+        <p class="text-muted mb-3 small">Advanced protection using JWT and Role-Based Access Control for all users.</p>
+        <div class="d-flex gap-2">
+            <span class="badge rounded-pill bg-light text-primary border px-3 py-2">JWT</span>
+            <span class="badge rounded-pill bg-light text-primary border px-3 py-2">RBAC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {{end}}
 
 {{template "base" .}}

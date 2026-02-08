@@ -59,18 +59,21 @@ function setNavbarLoggedOut() {
     $("navAdmin")?.classList.add("d-none");
     $("navModerator")?.classList.add("d-none");
 
+
     const label = $("navUserLabel");
     if (label) label.textContent = "Account";
 }
 
-function setNavbarLoggedIn(role, email) {
+function setNavbarLoggedIn(role, email, name, surname) {
     $("navLogin")?.classList.add("d-none");
     $("navUser")?.classList.remove("d-none");
 
+    $("mainLoginBtn")?.classList.add("d-none");
+
     const label = $("navUserLabel");
     if (label) {
-        const safeEmail = email || getEmail();
-        label.textContent = safeEmail ? `${safeEmail} (${role})` : `(${role})`;
+        const fullName = (name || surname) ? `${name} ${surname}`.trim() : (email || getEmail());
+        label.textContent = `${fullName} (${role})`;
     }
 
     if (role === "admin") {
@@ -119,7 +122,7 @@ async function initNavbar() {
     setRole(me.role);
     if (me.user_id != null) setUserId(me.user_id);
 
-    setNavbarLoggedIn(me.role, getEmail());
+    setNavbarLoggedIn(me.role, me.email, me.name, me.surname);
 
     bindOnce($("navLogout"), "click", (e) => {
         e.preventDefault();

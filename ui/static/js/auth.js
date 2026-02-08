@@ -117,33 +117,30 @@ async function afterAuthSuccess(out) {
     const tok = out?.token;
     if (tok) {
         setToken(tok);
-
         const exp = getJwtExp(tok);
         if (exp) setExpiry(exp);
     }
 
-    const outEmail = out?.user?.email || "";
-    const outRole = out?.user?.role || "";
-    const outUserId = out?.user?.id || "";
-
-    if (outEmail) localStorage.setItem(EMAIL_KEY, outEmail);
-    if (outRole) localStorage.setItem(ROLE_KEY, outRole);
-    if (outUserId) localStorage.setItem(USER_ID_KEY, outUserId);
+    const user = out?.user || {};
 
     const me = await apiGetMe();
-    const role = me?.role || outRole || localStorage.getItem(ROLE_KEY) || "";
-    const userId = me?.user_id || outUserId || localStorage.getItem(USER_ID_KEY) || "";
-    const email = outEmail || localStorage.getItem(EMAIL_KEY) || "";
+
+    const role = me?.role || user.role || localStorage.getItem(ROLE_KEY) || "";
+    const email = me?.email || user.email || localStorage.getItem(EMAIL_KEY) || "";
+    const userId = me?.user_id || user.id || localStorage.getItem(USER_ID_KEY) || "";
+    const name = me?.name || user.name || "";
+    const surname = me?.surname || user.surname || "";
 
     if (role) localStorage.setItem(ROLE_KEY, role);
-    if (userId) localStorage.setItem(USER_ID_KEY, userId);
     if (email) localStorage.setItem(EMAIL_KEY, email);
+    if (userId) localStorage.setItem(USER_ID_KEY, userId);
+    if (name) localStorage.setItem("aitu_name", name);
+    if (surname) localStorage.setItem("aitu_surname", surname);
 
     scheduleAutoLogout();
-
     if (role === "admin") window.location.href = "/admin";
     else if (role === "moderator") window.location.href = "/moderator";
-    else window.location.href = "/feed";
+    else window.location.href = "/profile";
 }
 
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {

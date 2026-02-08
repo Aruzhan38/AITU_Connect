@@ -21,11 +21,13 @@ func NewServer(h *Handler) *http.Server {
 		}
 		h.CanteenNewsPage(w, r)
 	})
+	mux.HandleFunc("/profile", h.ProfilePage)
 
 	// Auth
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/login", h.Login)
 	mux.Handle("/me", AuthMiddleware(h.authUC)(http.HandlerFunc(h.Me)))
+	mux.Handle("/api/profile/update", AuthMiddleware(h.authUC)(http.HandlerFunc(h.UpdateProfile)))
 
 	// Posts
 	mux.Handle("/api/posts/create", AuthMiddleware(h.authUC)(http.HandlerFunc(h.CreatePost)))

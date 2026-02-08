@@ -1,8 +1,116 @@
-/* app.css — page-specific styles */
+.hero-section {
+    min-height: 520px;
+    background-color: #052c65;
+    background-image: url('ui/static/img/hero-aitu.jpg');
+    background-position: center 30%;
+    background-size: cover;
+    border-radius: 30px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+}
 
-/* =======================
-   MENU PAGE ONLY
-   ======================= */
+.hero-overlay {
+    width: 100%;
+    background: linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0.9) 0%,
+            rgba(0, 0, 0, 0.4) 60%,
+            rgba(13, 110, 253, 0.2) 100%
+    );
+    display: flex;
+    align-items: center;
+    padding: 60px;
+}
+
+.hero-content h1 {
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.hero-content p {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    max-width: 600px;
+}
+
+.stat-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 5px solid var(--aitu-blue) !important;
+    background: #ffffff;
+    border-radius: 20px !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08) !important;
+}
+
+.stat-icon {
+    font-size: 2.2rem;
+    background: #f0f4ff;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.avatar-circle {
+    width: 45px;
+    height: 45px;
+    background: var(--aitu-blue);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+}
+
+.feed-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feed-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
+}
+
+.fw-extrabold { font-weight: 800; }
+
+.feed-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    transition: transform 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.feed-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(13, 110, 253, 0.08) !important;
+}
+
+.feed-card .post-author {
+    font-weight: 700;
+    color: var(--aitu-blue);
+    font-size: 0.9rem;
+}
+
+.feed-card .post-date {
+    font-size: 0.8rem;
+    color: #adb5bd;
+}
+
+.feed-card .post-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 10px 0;
+}
 
 .menu-page main.container{
     max-width: 100% !important;

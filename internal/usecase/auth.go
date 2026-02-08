@@ -150,3 +150,27 @@ func (a *AuthUsecase) Me(ctx context.Context, userID int64) (model.User, error) 
 	u.PasswordHash = ""
 	return u, nil
 }
+
+func (a *AuthUsecase) UpdateProfile(ctx context.Context, userID int64, u model.User) error {
+	u.Name = strings.TrimSpace(u.Name)
+	u.Surname = strings.TrimSpace(u.Surname)
+	u.Major = strings.TrimSpace(u.Major)
+	u.Email = strings.TrimSpace(strings.ToLower(u.Email))
+
+	if u.Email == "" {
+		return errors.New("email is required")
+	}
+	if !strings.Contains(u.Email, "@") {
+		return errors.New("invalid email format")
+	}
+	if !strings.HasSuffix(u.Email, "@aitu.kz") {
+		return ErrEmailDomain
+	}
+
+	existingUser, err := a.users.GetByEmail(ctx, u.Email)
+	if err == nil && existingUser.ID != userID {
+		return ErrEmailTaken
+	}
+
+	return a.users.UpdateProfile(ctx, userID, u)
+}
