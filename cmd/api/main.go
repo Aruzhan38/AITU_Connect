@@ -17,5 +17,3 @@ func main() {
 
 	app.Run(db)
 }
-
-//hi
