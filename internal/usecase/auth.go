@@ -48,8 +48,12 @@ func (a *AuthUsecase) Register(ctx context.Context, email, password string) (mod
 		return model.User{}, "", time.Time{}, ErrPasswordWeak
 	}
 
-	if _, err := a.users.GetByEmail(ctx, email); err == nil {
+	_, err := a.users.GetByEmail(ctx, email)
+	if err == nil {
 		return model.User{}, "", time.Time{}, ErrEmailTaken
+	}
+	if !errors.Is(err, pkg.ErrNotFound) {
+		return model.User{}, "", time.Time{}, err
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -59,17 +63,20 @@ func (a *AuthUsecase) Register(ctx context.Context, email, password string) (mod
 
 	role := "student"
 	u, err := a.users.Create(ctx, email, string(hash), role)
+	if err != nil {
+		return model.User{}, "", time.Time{}, err
+	}
 	if !model.AllowedRoles[role] {
 		return model.User{}, "", time.Time{}, ErrInvalidRole
 	}
 
 	token, err := a.issueToken(u.ID, u.Role)
-	expiry := time.Now().Add(a.tokenTTL)
-	if err := a.users.UpdateToken(ctx, u.ID, token, expiry); err != nil {
+	if err != nil {
 		return model.User{}, "", time.Time{}, err
 	}
 
-	if err != nil {
+	expiry := time.Now().Add(a.tokenTTL)
+	if err := a.users.UpdateToken(ctx, u.ID, token, expiry); err != nil {
 		return model.User{}, "", time.Time{}, err
 	}
 
