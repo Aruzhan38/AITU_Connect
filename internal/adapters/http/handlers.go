@@ -11,47 +11,39 @@ import (
 	"strings"
 )
 
-func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
-	render(w, "index.tmpl", nil)
-}
-
-func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
-	render(w, "login.tmpl", nil)
-}
-
+func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request)  { render(w, "index.tmpl", nil) }
+func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) { render(w, "login.tmpl", nil) }
 func (h *Handler) CanteensPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "canteen.tmpl", nil)
 }
-
-func (h *Handler) FeedPage(w http.ResponseWriter, r *http.Request) {
-	render(w, "feed.tmpl", nil)
-}
-
+func (h *Handler) FeedPage(w http.ResponseWriter, r *http.Request) { render(w, "feed.tmpl", nil) }
 func (h *Handler) CanteenNewsPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "canteen_news.tmpl", nil)
 }
-
-func (h *Handler) AdminPage(w http.ResponseWriter, r *http.Request) {
-	render(w, "admin.tmpl", nil)
-}
-
+func (h *Handler) AdminPage(w http.ResponseWriter, r *http.Request) { render(w, "admin.tmpl", nil) }
 func (h *Handler) ModeratorPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "moderator.tmpl", nil)
 }
-
 func (h *Handler) CafeMenuPage(w http.ResponseWriter, r *http.Request) {
 	render(w, "cafe_menu.tmpl", nil)
 }
-
-func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) {
-	render(w, "profile.tmpl", nil)
+func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) { render(w, "profile.tmpl", nil) }
+func (h *Handler) ClubsPage(w http.ResponseWriter, r *http.Request)   { render(w, "clubs.tmpl", nil) }
+func (h *Handler) CommunitiesPage(w http.ResponseWriter, r *http.Request) {
+	render(w, "communities.tmpl", nil)
+}
+func (h *Handler) CommunityFeed(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(strings.TrimSuffix(r.URL.Path, "/"), "/communities/")
+	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
+	render(w, "community_feed.tmpl", map[string]any{"CommunityID": id})
 }
 
 type Handler struct {
-	canteenUC *usecase.CanteenUsecase
-	authUC    *usecase.AuthUsecase
-	postUC    *usecase.PostUsecase
-	users     *pkg.UserRepository
+	canteenUC   *usecase.CanteenUsecase
+	authUC      *usecase.AuthUsecase
+	postUC      *usecase.PostUsecase
+	users       *pkg.UserRepository
+	communityUC *usecase.CommunityUsecase
 }
 
 func NewHandler(
@@ -59,12 +51,14 @@ func NewHandler(
 	authUC *usecase.AuthUsecase,
 	postUC *usecase.PostUsecase,
 	users *pkg.UserRepository,
+	communityUC *usecase.CommunityUsecase,
 ) *Handler {
 	return &Handler{
-		canteenUC: canteenUC,
-		authUC:    authUC,
-		postUC:    postUC,
-		users:     users,
+		canteenUC:   canteenUC,
+		authUC:      authUC,
+		postUC:      postUC,
+		users:       users,
+		communityUC: communityUC,
 	}
 }
 
@@ -343,18 +337,33 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Title   string `json:"title"`
-		Content string `json:"content"`
+		Title       string `json:"title"`
+		Content     string `json:"content"`
+		CommunityID int64  `json:"community_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
 
+	req.Title = strings.TrimSpace(req.Title)
+	req.Content = strings.TrimSpace(req.Content)
+
+	if req.Title == "" || req.Content == "" {
+		http.Error(w, "title and content are required", http.StatusBadRequest)
+		return
+	}
+	if req.CommunityID <= 0 {
+		http.Error(w, "community_id is required", http.StatusBadRequest)
+		return
+	}
+
+	cid := req.CommunityID
 	id, err := h.postUC.CreatePost(r.Context(), model.Post{
-		AuthorID: userID,
-		Title:    req.Title,
-		Content:  req.Content,
+		AuthorID:    userID,
+		Title:       req.Title,
+		Content:     req.Content,
+		CommunityID: &cid,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -412,6 +421,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "post not found", http.StatusNotFound)
 		return
 	}
+
 	if role == "admin" {
 		if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -420,6 +430,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+
 	if post.AuthorID == userID {
 		if err := h.postUC.DeletePost(r.Context(), postID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -428,6 +439,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+
 	if role == "moderator" {
 		author, err := h.users.GetByID(r.Context(), post.AuthorID)
 		if err != nil {
@@ -449,6 +461,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	http.Error(w, "forbidden", http.StatusForbidden)
 }
+
 func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	role, ok := RoleFromContext(r.Context())
 	if !ok || role == "" {
@@ -561,4 +574,104 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		"status":  "ok",
 		"message": "profile updated successfully",
 	})
+}
+
+func (h *Handler) GetCommunities(w http.ResponseWriter, r *http.Request) {
+	if !methodOnly(w, r, http.MethodGet) {
+		return
+	}
+
+	userID, ok := UserIDFromContext(r.Context())
+	memberships := map[int64]bool{}
+	if ok {
+		m, err := h.communityUC.UserMemberships(r.Context(), userID)
+		if err == nil {
+			memberships = m
+		}
+	}
+
+	list, err := h.communityUC.List(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	writeJSON(w, 200, map[string]any{
+		"communities": list,
+		"memberships": memberships,
+	})
+}
+
+func (h *Handler) JoinCommunity(w http.ResponseWriter, r *http.Request) {
+	if !methodOnly(w, r, http.MethodPost) {
+		return
+	}
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", 401)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/communities/join/")
+	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
+	if id <= 0 {
+		http.Error(w, "invalid id", 400)
+		return
+	}
+
+	if err := h.communityUC.Join(r.Context(), id, userID); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(204)
+}
+
+func (h *Handler) LeaveCommunity(w http.ResponseWriter, r *http.Request) {
+	if !methodOnly(w, r, http.MethodPost) {
+		return
+	}
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", 401)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/communities/leave/")
+	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
+	if id <= 0 {
+		http.Error(w, "invalid id", 400)
+		return
+	}
+
+	if err := h.communityUC.Leave(r.Context(), id, userID); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(204)
+}
+
+func (h *Handler) GetCommunityPosts(w http.ResponseWriter, r *http.Request) {
+	if !methodOnly(w, r, http.MethodGet) {
+		return
+	}
+
+	if !strings.HasSuffix(strings.TrimSuffix(r.URL.Path, "/"), "/posts") {
+		http.NotFound(w, r)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/communities/")
+	idStr = strings.TrimSuffix(idStr, "/posts")
+	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
+	if id <= 0 {
+		http.Error(w, "invalid id", 400)
+		return
+	}
+
+	posts, err := h.postUC.GetByCommunity(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, 200, posts)
 }

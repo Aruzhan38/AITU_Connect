@@ -13,11 +13,13 @@ func Run(db *sql.DB) {
 	newsRepo := pkg.NewCanteenNewsRepository(db)
 	userRepo := pkg.NewUserRepository(db)
 	postRepo := pkg.NewPostRepository(db)
+	communityRepo := pkg.NewCommunityRepository(db)
 
 	canteenUC := usecase.NewCanteenUsecase(canteenRepo, newsRepo)
 	authUC := usecase.NewAuthUsecase(userRepo, "super_secret_key")
 	postUC := usecase.NewPostUsecase(postRepo)
-	handler := http.NewHandler(canteenUC, authUC, postUC, userRepo)
+	communityUC := usecase.NewCommunityUsecase(communityRepo)
+	handler := http.NewHandler(canteenUC, authUC, postUC, userRepo, communityUC)
 
 	server := http.NewServer(handler)
 

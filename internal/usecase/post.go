@@ -25,3 +25,7 @@ func (u *PostUsecase) GetFeed(ctx context.Context) ([]model.Post, error) {
 func (u *PostUsecase) DeletePost(ctx context.Context, postID int64) error {
 	return u.repo.Delete(ctx, postID)
 }
+
+func (u *PostUsecase) GetByCommunity(ctx context.Context, communityID int64) ([]model.Post, error) {
+	return u.repo.GetByCommunity(ctx, communityID)
+}

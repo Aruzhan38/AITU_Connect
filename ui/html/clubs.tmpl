@@ -1,0 +1,111 @@
+{{define "title"}}Clubs — AITU Connect{{end}}
+
+{{define "content"}}
+<div class="container py-4">
+
+  <div class="d-flex align-items-end justify-content-between gap-3 flex-wrap mb-3">
+    <div>
+      <h1 class="fw-bold mb-1">Clubs</h1>
+      <p class="text-muted mb-0">University clubs & communities. Tap a card for details.</p>
+    </div>
+
+    <div class="input-group" style="max-width: 380px;">
+      <span class="input-group-text bg-white"><span class="small">🔎</span></span>
+      <input id="clubSearch" class="form-control" placeholder="Search clubs...">
+    </div>
+  </div>
+
+  <div id="clubsGrid" class="row g-3"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="clubModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-body p-0">
+        <div class="p-4">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="text-muted small" id="mCategory">Club</div>
+              <h4 class="fw-bold mb-1" id="mTitle">—</h4>
+              <div class="text-muted" id="mDesc">—</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="mt-3 d-flex flex-wrap gap-2">
+            <span class="badge rounded-pill text-bg-light" id="mTag1">—</span>
+            <span class="badge rounded-pill text-bg-light" id="mTag2">—</span>
+            <span class="badge rounded-pill text-bg-light" id="mTag3">—</span>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <a id="mTelegram" class="btn btn-primary px-4" href="#" target="_blank" rel="noopener">
+              Open Telegram
+            </a>
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+
+        <div class="px-4 pb-4">
+          <div class="club-modal-banner rounded-4 p-3">
+            <div class="small text-muted">Tip</div>
+            <div class="fw-semibold">Join, follow updates, and find events.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .club-card{
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06);
+    transition: transform .18s ease, box-shadow .18s ease;
+    cursor: pointer;
+    height: 100%;
+  }
+  .club-card:hover{
+    transform: translateY(-6px);
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.12);
+  }
+  .club-top{
+    padding: 18px 18px 0 18px;
+  }
+  .club-emoji{
+    width: 44px; height: 44px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 14px;
+    background: rgba(59,130,246,.10);
+    font-size: 22px;
+  }
+  .club-body{
+    padding: 14px 18px 18px 18px;
+  }
+  .club-title{ font-weight: 800; margin:0; }
+  .club-desc{ color:#64748b; margin: 6px 0 0 0; }
+  .club-footer{
+    padding: 0 18px 18px 18px;
+    display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .club-chip{
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color:#0f172a;
+  }
+  .club-modal-banner{
+    background: linear-gradient(135deg, rgba(59,130,246,.10), rgba(16,185,129,.10));
+    border: 1px solid rgba(15, 23, 42, 0.06);
+  }
+</style>
+
+<script src="/static/js/clubs.js"></script>
+{{end}}
+
+{{template "base" .}}
