@@ -24,9 +24,6 @@ func NewServer(h *Handler) *http.Server {
 		h.CanteenNewsPage(w, r)
 	})
 
-	mux.HandleFunc("/communities", h.CommunitiesPage)
-	mux.HandleFunc("/communities/", h.CommunityFeed)
-
 	// Auth
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/login", h.Login)
@@ -89,12 +86,6 @@ func NewServer(h *Handler) *http.Server {
 	mux.Handle("/api/admin/stats", AuthMiddleware(h.authUC)(
 		RequireRoles("admin")(http.HandlerFunc(h.GetStats)),
 	))
-
-	// Communities API
-	mux.Handle("/api/communities", AuthMiddleware(h.authUC)(http.HandlerFunc(h.GetCommunities)))
-	mux.Handle("/api/communities/join/", AuthMiddleware(h.authUC)(http.HandlerFunc(h.JoinCommunity)))
-	mux.Handle("/api/communities/leave/", AuthMiddleware(h.authUC)(http.HandlerFunc(h.LeaveCommunity)))
-	mux.HandleFunc("/api/communities/", h.GetCommunityPosts) // /api/communities/{id}/posts
 
 	// Static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/static"))))

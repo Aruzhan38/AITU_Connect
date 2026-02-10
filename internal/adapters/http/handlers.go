@@ -29,21 +29,12 @@ func (h *Handler) CafeMenuPage(w http.ResponseWriter, r *http.Request) {
 }
 func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) { render(w, "profile.tmpl", nil) }
 func (h *Handler) ClubsPage(w http.ResponseWriter, r *http.Request)   { render(w, "clubs.tmpl", nil) }
-func (h *Handler) CommunitiesPage(w http.ResponseWriter, r *http.Request) {
-	render(w, "communities.tmpl", nil)
-}
-func (h *Handler) CommunityFeed(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(strings.TrimSuffix(r.URL.Path, "/"), "/communities/")
-	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
-	render(w, "community_feed.tmpl", map[string]any{"CommunityID": id})
-}
 
 type Handler struct {
-	canteenUC   *usecase.CanteenUsecase
-	authUC      *usecase.AuthUsecase
-	postUC      *usecase.PostUsecase
-	users       *pkg.UserRepository
-	communityUC *usecase.CommunityUsecase
+	canteenUC *usecase.CanteenUsecase
+	authUC    *usecase.AuthUsecase
+	postUC    *usecase.PostUsecase
+	users     *pkg.UserRepository
 }
 
 func NewHandler(
@@ -51,14 +42,12 @@ func NewHandler(
 	authUC *usecase.AuthUsecase,
 	postUC *usecase.PostUsecase,
 	users *pkg.UserRepository,
-	communityUC *usecase.CommunityUsecase,
 ) *Handler {
 	return &Handler{
-		canteenUC:   canteenUC,
-		authUC:      authUC,
-		postUC:      postUC,
-		users:       users,
-		communityUC: communityUC,
+		canteenUC: canteenUC,
+		authUC:    authUC,
+		postUC:    postUC,
+		users:     users,
 	}
 }
 
@@ -578,104 +567,4 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		"status":  "ok",
 		"message": "profile updated successfully",
 	})
-}
-
-func (h *Handler) GetCommunities(w http.ResponseWriter, r *http.Request) {
-	if !methodOnly(w, r, http.MethodGet) {
-		return
-	}
-
-	userID, ok := UserIDFromContext(r.Context())
-	memberships := map[int64]bool{}
-	if ok {
-		m, err := h.communityUC.UserMemberships(r.Context(), userID)
-		if err == nil {
-			memberships = m
-		}
-	}
-
-	list, err := h.communityUC.List(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
-	writeJSON(w, 200, map[string]any{
-		"communities": list,
-		"memberships": memberships,
-	})
-}
-
-func (h *Handler) JoinCommunity(w http.ResponseWriter, r *http.Request) {
-	if !methodOnly(w, r, http.MethodPost) {
-		return
-	}
-	userID, ok := UserIDFromContext(r.Context())
-	if !ok {
-		http.Error(w, "unauthorized", 401)
-		return
-	}
-
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/communities/join/")
-	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
-	if id <= 0 {
-		http.Error(w, "invalid id", 400)
-		return
-	}
-
-	if err := h.communityUC.Join(r.Context(), id, userID); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	w.WriteHeader(204)
-}
-
-func (h *Handler) LeaveCommunity(w http.ResponseWriter, r *http.Request) {
-	if !methodOnly(w, r, http.MethodPost) {
-		return
-	}
-	userID, ok := UserIDFromContext(r.Context())
-	if !ok {
-		http.Error(w, "unauthorized", 401)
-		return
-	}
-
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/communities/leave/")
-	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
-	if id <= 0 {
-		http.Error(w, "invalid id", 400)
-		return
-	}
-
-	if err := h.communityUC.Leave(r.Context(), id, userID); err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	w.WriteHeader(204)
-}
-
-func (h *Handler) GetCommunityPosts(w http.ResponseWriter, r *http.Request) {
-	if !methodOnly(w, r, http.MethodGet) {
-		return
-	}
-
-	if !strings.HasSuffix(strings.TrimSuffix(r.URL.Path, "/"), "/posts") {
-		http.NotFound(w, r)
-		return
-	}
-
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/communities/")
-	idStr = strings.TrimSuffix(idStr, "/posts")
-	id, _ := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
-	if id <= 0 {
-		http.Error(w, "invalid id", 400)
-		return
-	}
-
-	posts, err := h.postUC.GetByCommunity(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	writeJSON(w, 200, posts)
 }
