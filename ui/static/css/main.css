@@ -7,6 +7,13 @@
 body {
     background: var(--aitu-bg);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+}
+
+h1,h2,h3{
+    letter-spacing: -0.02em;
 }
 
 .btn-primary {
@@ -29,5 +36,18 @@ body {
     padding: 10px 28px;
     border-width: 2px;
     font-weight: 600;
+}
+
+.navbar-brand img {
+    display: block;
+}
+
+.navbar-logo {
+    height: 60px;
+    width: auto;
+}
+
+.navbar-brand span {
+    letter-spacing: -0.02em;
 }
 

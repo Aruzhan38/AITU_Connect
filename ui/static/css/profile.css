@@ -1,0 +1,211 @@
+.profile-page body,
+body.profile-page {
+    background: radial-gradient(1100px 600px at 15% 0%, #eaf2ff 0%, #f7f9ff 42%, #f6f7fb 100%);
+}
+.profile-page main.container,
+body.profile-page main.container {
+    padding-top: 56px;
+    padding-bottom: 72px;
+}
+
+.profile-page .card,
+body.profile-page .card {
+    border-radius: 22px !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08) !important;
+}
+.profile-page .card.shadow-sm,
+body.profile-page .card.shadow-sm {
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08) !important;
+}
+.profile-page .card:hover,
+body.profile-page .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 56px rgba(15, 23, 42, 0.12) !important;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.profile-page #cardAvatar,
+body.profile-page #cardAvatar {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 999px;
+}
+.profile-page .position-relative.d-inline-block.mx-auto.mb-3,
+body.profile-page .position-relative.d-inline-block.mx-auto.mb-3 {
+    position: relative;
+}
+.profile-page .position-relative.d-inline-block.mx-auto.mb-3::after,
+body.profile-page .position-relative.d-inline-block.mx-auto.mb-3::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(13,110,253,.45), rgba(59,130,246,.18));
+    filter: blur(0.2px);
+    z-index: -1;
+    opacity: .25;
+}
+.profile-page #cardFullName,
+body.profile-page #cardFullName {
+    letter-spacing: -0.02em;
+}
+.profile-page #cardMajor,
+body.profile-page #cardMajor {
+    opacity: .85;
+}
+
+.profile-page label.text-uppercase.small.fw-bold.text-muted,
+body.profile-page label.text-uppercase.small.fw-bold.text-muted {
+    letter-spacing: .08em;
+    font-size: .68rem !important;
+}
+
+.profile-page .bg-soft-primary,
+body.profile-page .bg-soft-primary {
+    background: rgba(13,110,253,.10) !important;
+    border: 1px solid rgba(13,110,253,.14);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+
+.profile-page .card-body h5.fw-bold,
+body.profile-page .card-body h5.fw-bold {
+    font-size: 1.1rem;
+    letter-spacing: -0.015em;
+}
+.profile-page .badge.bg-light.text-dark.border.shadow-sm,
+body.profile-page .badge.bg-light.text-dark.border.shadow-sm {
+    border-radius: 999px;
+    padding: 8px 12px;
+    border-color: rgba(15,23,42,.10) !important;
+    background: rgba(255,255,255,.75) !important;
+    backdrop-filter: blur(6px);
+}
+
+.profile-page h5.fw-bold.mt-4.mb-3,
+body.profile-page h5.fw-bold.mt-4.mb-3 {
+    margin-top: 24px !important;
+    padding-top: 6px;
+    letter-spacing: -0.015em;
+}
+.profile-page h5.fw-bold.mt-4.mb-3::before,
+body.profile-page h5.fw-bold.mt-4.mb-3::before {
+    content: "";
+    display: block;
+    height: 1px;
+    margin: 0 0 14px;
+    background: linear-gradient(90deg, rgba(15,23,42,.10), rgba(15,23,42,0));
+}
+
+.profile-page .form-control,
+.profile-page .form-select,
+body.profile-page .form-control,
+body.profile-page .form-select {
+    border-radius: 16px !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    background: rgba(248, 250, 252, 0.92) !important;
+    box-shadow: none !important;
+}
+.profile-page .form-control.form-control-lg,
+.profile-page .form-select.form-select-lg,
+body.profile-page .form-control.form-control-lg,
+body.profile-page .form-select.form-select-lg {
+    padding: 12px 14px !important;
+    font-size: 1.02rem;
+}
+.profile-page .form-label.small.fw-bold.text-muted,
+body.profile-page .form-label.small.fw-bold.text-muted {
+    color: rgba(15,23,42,.62) !important;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+}
+
+.profile-page .form-control:focus,
+.profile-page .form-select:focus,
+body.profile-page .form-control:focus,
+body.profile-page .form-select:focus {
+    border-color: rgba(13,110,253,.35) !important;
+    box-shadow: 0 0 0 4px rgba(13,110,253,.12) !important;
+    background: rgba(255,255,255,.98) !important;
+}
+
+.profile-page .input-group-text,
+body.profile-page .input-group-text {
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    background: rgba(248, 250, 252, 0.92) !important;
+    border-radius: 16px 0 0 16px !important;
+}
+.profile-page .input-group .form-control,
+body.profile-page .input-group .form-control {
+    border-left: 0 !important;
+    border-radius: 0 16px 16px 0 !important;
+}
+
+.profile-page input[readonly],
+.profile-page select[disabled],
+body.profile-page input[readonly],
+body.profile-page select[disabled] {
+    background: rgba(248, 250, 252, 0.70) !important;
+    color: rgba(15,23,42,.75) !important;
+    cursor: default !important;
+}
+
+.profile-page #save-btn,
+.profile-page #edit-btn,
+body.profile-page #save-btn,
+body.profile-page #edit-btn {
+    border-radius: 999px !important;
+}
+.profile-page #save-btn,
+body.profile-page #save-btn {
+    padding: 12px 22px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em;
+    box-shadow: 0 14px 28px rgba(13,110,253,.18) !important;
+}
+.profile-page #save-btn:hover,
+body.profile-page #save-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 34px rgba(13,110,253,.24) !important;
+}
+.profile-page #edit-btn,
+body.profile-page #edit-btn {
+    padding: 12px 18px !important;
+    border-color: rgba(13,110,253,.28) !important;
+    background: rgba(255,255,255,.70) !important;
+    backdrop-filter: blur(6px);
+}
+.profile-page #edit-btn:hover,
+body.profile-page #edit-btn:hover {
+    background: rgba(13,110,253,.06) !important;
+}
+
+@media (min-width: 992px) {
+    .profile-page .d-flex.justify-content-end.pt-3.gap-2,
+    body.profile-page .d-flex.justify-content-end.pt-3.gap-2 {
+        position: sticky;
+        bottom: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.75) 28%, rgba(255,255,255,.92) 100%);
+        padding: 18px 0 6px !important;
+        z-index: 2;
+        border-radius: 18px;
+    }
+}
+
+@media (max-width: 576px) {
+    .profile-page .card-body,
+    body.profile-page .card-body {
+        padding: 18px !important;
+    }
+    .profile-page #save-btn,
+    body.profile-page #save-btn {
+        width: 100%;
+    }
+    .profile-page #edit-btn,
+    body.profile-page #edit-btn {
+        width: 100%;
+    }
+}

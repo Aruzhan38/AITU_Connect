@@ -8,6 +8,10 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="/static/css/main.css?v=10">
   <link rel="stylesheet" href="/static/css/app.css?v=10">
 
@@ -17,7 +21,10 @@
 <body class="{{block "body_class" .}}{{end}}">
 <header class="border-bottom bg-white">
   <nav class="navbar navbar-expand-lg container py-3">
-    <a class="navbar-brand fw-bold" href="/">AITU Connect</a>
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="/">
+      <img src="/static/img/aitu-logo_.png" alt="AITU Logo" height="40">
+      <span>AITU Connect</span>
+    </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
       <span class="navbar-toggler-icon"></span>
@@ -64,7 +71,9 @@
 </main>
 
 <footer class="border-top bg-white">
-  <div class="container py-3 text-muted">© AITU Connect</div>
+  <div class="container py-4 text-center text-muted small">
+    © AITU Connect · Unified campus platform for students, clubs and staff
+  </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

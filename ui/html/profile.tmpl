@@ -1,4 +1,9 @@
 {{define "title"}}Profile Settings — AITU Connect{{end}}
+{{define "body_class"}}profile-page{{end}}
+
+{{define "head"}}
+<link rel="stylesheet" href="/static/css/profile.css?v=10">
+{{end}}
 
 {{define "content"}}
 <div class="container py-5">
@@ -108,12 +113,6 @@
     </div>
 </div>
 
-<style>
-    body { background-color: #f8f9fa; }
-    .form-control:focus, .form-select:focus { background-color: #f1f3f5 !important; }
-    .bg-soft-primary { background-color: #e7f0ff; }
-    input[readonly], select[disabled] { background-color: #f8f9fa !important; cursor: default; }
-</style>
 {{end}}
 
 {{define "scripts"}}
