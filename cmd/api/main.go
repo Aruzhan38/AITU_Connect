@@ -6,13 +6,16 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
+	_ = godotenv.Load(".env")
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://aitu:aitu123@localhost:5434/aitu_connect?sslmode=disable"
+		log.Fatal("DATABASE_URL is not set")
 	}
 
 	db, err := sql.Open("postgres", dsn)
