@@ -26,9 +26,10 @@ func (r *UserRepository) Create(ctx context.Context, email, passwordHash, role s
 				  (SELECT name FROM roles WHERE id = role_id) as role, COALESCE(course, 0) as course, 
 				  COALESCE(major, '') as major, COALESCE(github_url, '') as github_url, 
 				  COALESCE(lms_url, '') as lms_url, COALESCE(du_url, '') as du_url, 
+				  COALESCE(club_name, '') as club_name,
 				  token, token_expiry, created_at
 	`, email, passwordHash, role).Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.PasswordHash, &u.Role, &u.Course,
-		&u.Major, &u.GithubURL, &u.LmsURL, &u.DuURL, &u.Token, &u.TokenExpiry, &u.CreatedAt)
+		&u.Major, &u.GithubURL, &u.LmsURL, &u.DuURL, &u.ClubName, &u.Token, &u.TokenExpiry, &u.CreatedAt)
 
 	if err != nil {
 		return model.User{}, err
@@ -45,7 +46,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (model.Us
 	   SELECT 
 		   u.id, u.name, u.surname, u.email, u.password_hash, 
 		   r.name as role, u.course, u.major, u.github_url, 
-		   u.lms_url, u.du_url, u.token, u.token_expiry, u.created_at
+		   u.lms_url, u.du_url, COALESCE(u.club_name, ''), u.token, u.token_expiry, u.created_at
 	   FROM users u
 	   LEFT JOIN roles r ON u.role_id = r.id
 	   WHERE u.email = $1
@@ -61,6 +62,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (model.Us
 		&u.GithubURL,
 		&u.LmsURL,
 		&u.DuURL,
+		&u.ClubName,
 		&u.Token,
 		&u.TokenExpiry,
 		&u.CreatedAt,
@@ -89,7 +91,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (model.User, err
 	   SELECT 
 		   u.id, u.name, u.surname, u.email, u.password_hash, 
 		   r.name as role, u.course, u.major, u.github_url, 
-		   u.lms_url, u.du_url, u.token, u.token_expiry, u.created_at
+		   u.lms_url, u.du_url, COALESCE(u.club_name, ''), u.token, u.token_expiry, u.created_at
 	   FROM users u
 	   LEFT JOIN roles r ON u.role_id = r.id
 	   WHERE u.id = $1
@@ -105,6 +107,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (model.User, err
 		&u.GithubURL,
 		&u.LmsURL,
 		&u.DuURL,
+		&u.ClubName,
 		&u.Token,
 		&u.TokenExpiry,
 		&u.CreatedAt,
@@ -121,7 +124,7 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]model.User, error) {
 	   SELECT 
 		   u.id, u.name, u.surname, u.email, u.password_hash, 
 		   r.name as role, u.course, u.major, u.github_url, 
-		   u.lms_url, u.du_url, u.token, u.token_expiry, u.created_at
+		   u.lms_url, u.du_url, COALESCE(u.club_name, ''), u.token, u.token_expiry, u.created_at
 	   FROM users u
 	   LEFT JOIN roles r ON u.role_id = r.id
 	   ORDER BY u.created_at DESC
@@ -147,6 +150,7 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]model.User, error) {
 			&u.GithubURL,
 			&u.LmsURL,
 			&u.DuURL,
+			&u.ClubName,
 			&u.Token,
 			&u.TokenExpiry,
 			&u.CreatedAt,
@@ -179,8 +183,9 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, userID int64, u mode
 			github_url = $5, 
 			lms_url = $6, 
 			du_url = $7,
-			email = $8
-		WHERE id = $9
+			email = $8,
+			club_name = $9
+		WHERE id = $10
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
@@ -192,7 +197,16 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, userID int64, u mode
 		u.LmsURL,
 		u.DuURL,
 		u.Email,
+		u.ClubName,
 		userID,
 	)
+	return err
+}
+func (r *UserRepository) UpdateClubName(ctx context.Context, userID int64, clubName string) error {
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE users
+		SET club_name = $1
+		WHERE id = $2
+	`, clubName, userID)
 	return err
 }

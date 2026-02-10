@@ -3,31 +3,25 @@
 {{define "content"}}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div>
-                <h2 class="fw-bold mb-0">Campus Feed</h2>
-                <p class="text-muted small mb-0">What's happening at AITU</p>
-            </div>
-            <button id="togglePostBtn" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold d-none">
-                + Create Post
-            </button>
-        </div>
+        <h2 class="fw-bold mb-2">Campus Feed</h2>
+        <p class="text-muted small mb-4">What's happening at AITU</p>
 
-        <div id="createPostArea" class="card shadow-sm border-0 mb-5 rounded-4 d-none">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">New Publication</h5>
-                    <button type="button" class="btn-close" id="closePostBtn"></button>
-                </div>
+        
+        <div id="createPostArea" class="card shadow border-0 mb-5 rounded-4" style="background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);">
+            <div class="card-body p-5">
+                <h5 class="fw-bold mb-4">✍️ Create New Post</h5>
                 <form id="postForm">
                     <div class="mb-3">
-                        <input type="text" id="postTitle" class="form-control border-0 bg-light py-2 shadow-none" placeholder="Title" required>
+                        <label for="postTitle" class="form-label text-muted small">Post Title</label>
+                        <input type="text" id="postTitle" class="form-control border-0 bg-light py-3 shadow-sm" placeholder="Give your post a title..." required>
                     </div>
-                    <div class="mb-3">
-                        <textarea id="postContent" class="form-control border-0 bg-light shadow-none" rows="3" placeholder="Write something..." required></textarea>
+                    <div class="mb-4">
+                        <label for="postContent" class="form-label text-muted small">Message</label>
+                        <textarea id="postContent" class="form-control border-0 bg-light shadow-sm" rows="4" placeholder="Share your thoughts with the AITU community..." required></textarea>
                     </div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm fw-bold">Post</button>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" id="cancelPostBtn" class="btn btn-outline-secondary px-5 rounded-pill fw-bold">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm fw-bold">📤 Publish</button>
                     </div>
                 </form>
             </div>

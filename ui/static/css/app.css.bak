@@ -112,7 +112,7 @@
     margin: 10px 0;
 }
 
-
+/* Like button visual state */
 .btn-like {
     transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }

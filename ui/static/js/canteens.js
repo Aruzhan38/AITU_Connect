@@ -12,9 +12,9 @@ async function loadCanteens() {
     container.innerHTML = "";
 
     const CAFE_IDS = new Set([
-        "d85854aa-a302-4519-b98a-17eea9f104f1", // Mokko
-        "b15d9916-0714-4957-bf18-ee58d13e61fc", // Atrium
-        "61ce75fd-0b4e-4535-8ae3-61924a5ec6ea", // Sheker
+        "d85854aa-a302-4519-b98a-17eea9f104f1", 
+        "b15d9916-0714-4957-bf18-ee58d13e61fc", 
+        "61ce75fd-0b4e-4535-8ae3-61924a5ec6ea", 
     ]);
 
     data.forEach((c) => {

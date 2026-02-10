@@ -1,5 +1,22 @@
 (() => {
-    const auth = window.AITU_AUTH;
+    const TOKEN_KEY = "aitu_token";
+    const ROLE_KEY = "aitu_role";
+    const USER_ID_KEY = "aitu_user_id";
+
+    function getToken() {
+        const t = localStorage.getItem(TOKEN_KEY);
+        return t ? t.trim() : "";
+    }
+
+    function getRole() {
+        const r = localStorage.getItem(ROLE_KEY);
+        return r ? r.trim().toLowerCase() : "";
+    }
+
+    function getUserId() {
+        const u = localStorage.getItem(USER_ID_KEY);
+        return u ? parseInt(u, 10) : 0;
+    }
 
     function escapeHtml(s) {
         return String(s ?? "").replace(/[&<>"']/g, (m) => ({
@@ -18,48 +35,62 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        const token = auth?.getToken?.() || "";
+        const token = getToken();
+        const role = getRole();
         const createPostArea = document.getElementById("createPostArea");
-        const toggleBtn = document.getElementById("togglePostBtn");
-        const closeBtn = document.getElementById("closePostBtn");
         const postForm = document.getElementById("postForm");
+        const cancelBtn = document.getElementById("cancelPostBtn");
 
-        if (token && toggleBtn) toggleBtn.classList.remove("d-none");
+        console.log("[Feed] Role check:", role);
+        
+        // Show form only to authenticated users
+        if (!token) {
+            if (createPostArea) createPostArea.style.display = "none";
+        }
 
-        toggleBtn?.addEventListener("click", () => {
-            createPostArea?.classList.remove("d-none");
-            toggleBtn.classList.add("d-none");
-        });
-
-        closeBtn?.addEventListener("click", () => {
-            createPostArea?.classList.add("d-none");
-            toggleBtn?.classList.remove("d-none");
+        cancelBtn?.addEventListener("click", () => {
+            postForm?.reset();
         });
 
         postForm?.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const data = {
-                title: (document.getElementById("postTitle")?.value || "").trim(),
-                content: (document.getElementById("postContent")?.value || "").trim(),
-            };
+            const currentToken = getToken();
+            if (!currentToken) {
+                alert("Not authenticated. Please log in first.");
+                return;
+            }
 
-            const res = await fetch("/api/posts/create", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify(data),
-            });
+            const title = (document.getElementById("postTitle")?.value || "").trim();
+            const content = (document.getElementById("postContent")?.value || "").trim();
 
-            if (res.ok) {
-                postForm.reset();
-                createPostArea?.classList.add("d-none");
-                toggleBtn?.classList.remove("d-none");
-                loadFeed();
-            } else {
-                alert(await res.text());
+            if (!title || !content) {
+                alert("Title and content are required");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/posts/create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${currentToken}`,
+                    },
+                    body: JSON.stringify({ 
+                        title, 
+                        content
+                    }),
+                });
+
+                if (res.ok) {
+                    postForm.reset();
+                    await loadFeed();
+                } else {
+                    const errMsg = await res.text();
+                    alert("Error: " + errMsg);
+                }
+            } catch (err) {
+                alert("Request failed: " + err.message);
             }
         });
 
@@ -88,17 +119,24 @@
                 return;
             }
 
-            const currentUserRole = (auth?.getRole?.() || "").toLowerCase();
-            const currentUserId = Number(auth?.getUserId?.() || 0);
+            const currentUserRole = getRole();
+            const currentUserId = getUserId();
 
             container.innerHTML = posts.map((p) => {
-                const authorRole = (p.author_role || "").toLowerCase();
+                const authorRole = (p.author_role || "").toLowerCase().trim();
                 const canDelete =
                     p.author_id === currentUserId ||
                     currentUserRole === "admin" ||
                     (currentUserRole === "moderator" && authorRole !== "admin");
 
-                const username = (p.author_email || "user@aitu.kz").split("@")[0];
+                let username = "";
+                if (authorRole === "admin") {
+                    username = "ДСВР";
+                } else if (authorRole === "club_leader" && p.author_club_name) {
+                    username = p.author_club_name;
+                } else {
+                    username = (p.author_email || "user@aitu.kz").split("@")[0];
+                }
                 const initial = username.charAt(0).toUpperCase();
 
                 return `
@@ -120,10 +158,11 @@
               <h5 class="fw-bold mb-2">${escapeHtml(p.title)}</h5>
               <p class="text-secondary mb-3" style="line-height: 1.6;">${escapeHtml(p.content)}</p>
 
-              <div class="d-flex gap-3 pt-3 border-top">
-                <button class="btn btn-sm btn-light rounded-pill px-3 border" type="button" data-like="${p.id}">❤️ Like</button>
-                <button class="btn btn-sm btn-light rounded-pill px-3 border" type="button" data-comment="${p.id}">💬 Comment</button>
-              </div>
+                            <div class="d-flex gap-3 pt-3 border-top">
+                                <button class="btn btn-sm btn-light rounded-pill px-3 border btn-like ${p.liked ? 'liked' : ''}" type="button" data-like="${p.id}" data-liked="${p.liked ? '1' : '0'}">❤️</button>
+                                <span class="ms-2 text-muted align-self-center" data-like-count="${p.id}">${p.likes_count || 0}</span>
+                                <button class="btn btn-sm btn-light rounded-pill px-3 border" type="button" data-comment="${p.id}">💬 Comment</button>
+                            </div>
             </div>
           </div>
         `;
@@ -137,8 +176,41 @@
             });
 
             container.querySelectorAll("[data-like]").forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    btn.textContent = "❤️ Liked";
+                btn.addEventListener("click", async () => {
+                    const token = getToken();
+                    if (!token) {
+                        alert("Please register or log in to like posts");
+                        return;
+                    }
+
+                    const postId = Number(btn.getAttribute("data-like") || "0");
+                    if (!postId) return;
+
+                    try {
+                        const res = await fetch(`/api/posts/${postId}/like`, {
+                            method: "POST",
+                            headers: { "Authorization": `Bearer ${token}` },
+                        });
+
+                        if (!res.ok) {
+                            const txt = await res.text();
+                            alert(txt);
+                            return;
+                        }
+
+                        const data = await res.json(); // { count: number, liked: bool }
+                        const countEl = container.querySelector(`[data-like-count="${postId}"]`);
+                        if (countEl) countEl.textContent = data.count;
+                        // toggle visual state via class, do not change button text
+                        if (data.liked) {
+                            btn.classList.add("liked");
+                        } else {
+                            btn.classList.remove("liked");
+                        }
+                        btn.setAttribute("data-liked", data.liked ? "1" : "0");
+                    } catch (err) {
+                        alert("Request failed: " + err.message);
+                    }
                 });
             });
 
@@ -156,7 +228,7 @@
     async function deletePost(postId) {
         if (!confirm("Are you sure you want to delete this post?")) return;
 
-        const token = auth?.getToken?.() || "";
+        const token = getToken();
         if (!token) {
             alert("Not authenticated");
             return;

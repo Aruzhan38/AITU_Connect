@@ -28,6 +28,7 @@ func NewPostgres() (*sql.DB, error) {
 		"ALTER TABLE users ADD COLUMN IF NOT EXISTS github_url text",
 		"ALTER TABLE users ADD COLUMN IF NOT EXISTS lms_url text",
 		"ALTER TABLE users ADD COLUMN IF NOT EXISTS du_url text",
+		"ALTER TABLE users ADD COLUMN IF NOT EXISTS club_name text",
 	}
 
 	for _, s := range stmts {

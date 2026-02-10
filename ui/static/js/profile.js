@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const saveBtn = document.getElementById('save-btn');
     const editBtn = document.getElementById('edit-btn');
     const inputs = form.querySelectorAll('input, select');
+    const clubNameGroup = document.getElementById('clubNameGroup');
+    const clubNameInput = document.getElementById('club_name');
     const token = window.AITU_AUTH.getToken();
 
     if (!token) {
@@ -33,6 +35,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await window.AITU_AUTH.fetchMe();
         if (!user) return;
 
+        
+        const roleCheck = (user.role || "").toLowerCase().trim();
+        console.log("[Profile] User role:", user.role, "->normalized:", roleCheck);
+        if (roleCheck === "club_leader") {
+            console.log("[Profile] Showing club name field");
+            if (clubNameGroup) clubNameGroup.style.display = "block";
+            if (clubNameInput) clubNameInput.setAttribute("required", "required");
+        }
+
         document.getElementById('name').value = user.name || "";
         document.getElementById('surname').value = user.surname || "";
         document.getElementById('course').value = user.course || 1;
@@ -40,6 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('github_url').value = user.github_url || "";
         document.getElementById('lms_url').value = user.lms_url || "";
         document.getElementById('du_url').value = user.du_url || "";
+        if (clubNameInput) clubNameInput.value = user.club_name || "";
 
         const userIdDisplay = document.getElementById('displayUserId');
         if (userIdDisplay) userIdDisplay.textContent = user.user_id || user.id || "---";
@@ -76,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             github_url: document.getElementById('github_url').value,
             lms_url: document.getElementById('lms_url').value,
             du_url: document.getElementById('du_url').value,
+            club_name: clubNameInput?.value || "",
             email: window.AITU_AUTH.getEmail()
         };
 

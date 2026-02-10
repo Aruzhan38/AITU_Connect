@@ -8,7 +8,7 @@ import (
 func NewServer(h *Handler) *http.Server {
 	mux := http.NewServeMux()
 
-	// Pages
+	
 	mux.HandleFunc("/", h.HomePage)
 	mux.HandleFunc("/login", h.LoginPage)
 	mux.HandleFunc("/feed", h.FeedPage)
@@ -24,26 +24,33 @@ func NewServer(h *Handler) *http.Server {
 		h.CanteenNewsPage(w, r)
 	})
 
-	// Auth
+	
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/login", h.Login)
 	mux.Handle("/me", AuthMiddleware(h.authUC)(http.HandlerFunc(h.Me)))
 	mux.Handle("/api/profile/update", AuthMiddleware(h.authUC)(http.HandlerFunc(h.UpdateProfile)))
 
-	// Posts
+	
 	mux.Handle("/api/posts/create", AuthMiddleware(h.authUC)(http.HandlerFunc(h.CreatePost)))
 	mux.HandleFunc("/api/posts/feed", h.GetFeed)
 
-	deleteHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodDelete {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	
+	postsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		
+		if strings.HasSuffix(r.URL.Path, "/like") {
+			AuthMiddleware(h.authUC)(http.HandlerFunc(h.LikePost)).ServeHTTP(w, r)
 			return
 		}
-		h.DeletePost(w, r)
+		
+		if r.Method == http.MethodDelete {
+			AuthMiddleware(h.authUC)(http.HandlerFunc(h.DeletePost)).ServeHTTP(w, r)
+			return
+		}
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	})
-	mux.Handle("/api/posts/", AuthMiddleware(h.authUC)(deleteHandler))
+	mux.Handle("/api/posts/", postsHandler)
 
-	// Canteens
+	
 	mux.HandleFunc("/api/canteens", h.GetCanteens)
 
 	mux.Handle("/api/canteens/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +81,7 @@ func NewServer(h *Handler) *http.Server {
 		),
 	)
 
-	// Users
+	
 	mux.Handle("/api/users", AuthMiddleware(h.authUC)(
 		RequireRoles("admin", "moderator")(http.HandlerFunc(h.GetUsers)),
 	))
@@ -82,15 +89,15 @@ func NewServer(h *Handler) *http.Server {
 		RequireRoles("admin", "moderator")(http.HandlerFunc(h.UpdateUserRole)),
 	))
 
-	// Admin stats
+	
 	mux.Handle("/api/admin/stats", AuthMiddleware(h.authUC)(
 		RequireRoles("admin")(http.HandlerFunc(h.GetStats)),
 	))
 
-	// Static
+	
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/static"))))
 
-	// Admin pages
+	
 	mux.HandleFunc("/admin", h.AdminPage)
 	mux.HandleFunc("/moderator", h.ModeratorPage)
 

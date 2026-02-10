@@ -329,6 +329,12 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role, ok := RoleFromContext(r.Context())
+	if !ok {
+		http.Error(w, "role not found in context", http.StatusUnauthorized)
+		return
+	}
+
 	var req struct {
 		Title       string `json:"title"`
 		Content     string `json:"content"`
@@ -346,17 +352,33 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "title and content are required", http.StatusBadRequest)
 		return
 	}
-	if req.CommunityID <= 0 {
-		http.Error(w, "community_id is required", http.StatusBadRequest)
-		return
+
+	
+	var authorClubName string
+	if strings.ToLower(role) == "club_leader" {
+		user, err := h.users.GetByID(r.Context(), userID)
+		if err != nil {
+			http.Error(w, "failed to retrieve user", http.StatusInternalServerError)
+			return
+		}
+		authorClubName = user.ClubName
+		if authorClubName == "" {
+			http.Error(w, "please fill in your club name in your profile", http.StatusBadRequest)
+			return
+		}
 	}
 
-	cid := req.CommunityID
+	
+	var cid *int64
+	if req.CommunityID > 0 {
+		cid = &req.CommunityID
+	}
+
 	id, err := h.postUC.CreatePost(r.Context(), model.Post{
 		AuthorID:    userID,
 		Title:       req.Title,
 		Content:     req.Content,
-		CommunityID: &cid,
+		CommunityID: cid,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -367,7 +389,17 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
-	posts, err := h.postUC.GetFeed(r.Context())
+	
+	userID := int64(0)
+	auth := r.Header.Get("Authorization")
+	if strings.HasPrefix(auth, "Bearer ") {
+		token := strings.TrimPrefix(auth, "Bearer ")
+		if id, _, err := h.authUC.VerifyToken(token); err == nil {
+			userID = id
+		}
+	}
+
+	posts, err := h.postUC.GetFeed(r.Context(), userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -396,7 +428,7 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := h.postUC.GetFeed(r.Context())
+	posts, err := h.postUC.GetFeed(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "error fetching posts", http.StatusInternalServerError)
 		return
@@ -453,6 +485,37 @@ func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "forbidden", http.StatusForbidden)
+}
+
+func (h *Handler) LikePost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/posts/")
+	idStr = strings.TrimSuffix(idStr, "/like")
+	idStr = strings.Trim(idStr, "/")
+	postID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || postID <= 0 {
+		http.Error(w, "invalid post id", http.StatusBadRequest)
+		return
+	}
+
+	count, liked, err := h.postUC.ToggleLike(r.Context(), postID, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{"count": count, "liked": liked})
 }
 
 func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -515,7 +578,7 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 	}
 	userCount := len(users)
 
-	posts, err := h.postUC.GetFeed(r.Context())
+	posts, err := h.postUC.GetFeed(r.Context(), 0)
 	if err != nil {
 		http.Error(w, "failed to get posts", http.StatusInternalServerError)
 		return

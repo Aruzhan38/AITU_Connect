@@ -24,7 +24,7 @@ function setToken(token) {
 }
 
 function setExpiry(ts) {
-    // ts = unix seconds
+    
     localStorage.setItem(EXPIRY_KEY, String(ts));
 }
 

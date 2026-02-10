@@ -12,6 +12,7 @@ type User struct {
 	GithubURL    string     `json:"github_url"`
 	LmsURL       string     `json:"lms_url"`
 	DuURL        string     `json:"du_url"`
+	ClubName     string     `json:"club_name"`
 	PasswordHash string     `json:"-"`
 	Role         string     `json:"role"`
 	Token        *string    `json:"-"`
