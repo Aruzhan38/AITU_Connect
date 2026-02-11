@@ -8,6 +8,7 @@ import (
 	"log"
 )
 
+// composition root
 func Run(db *sql.DB) {
 	canteenRepo := pkg.NewCanteenRepository(db)
 	newsRepo := pkg.NewCanteenNewsRepository(db)
