@@ -353,7 +353,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	var authorClubName string
 	if strings.ToLower(role) == "club_leader" {
 		user, err := h.users.GetByID(r.Context(), userID)
@@ -368,7 +367,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	
 	var cid *int64
 	if req.CommunityID > 0 {
 		cid = &req.CommunityID
@@ -389,7 +387,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
-	
+
 	userID := int64(0)
 	auth := r.Header.Get("Authorization")
 	if strings.HasPrefix(auth, "Bearer ") {
@@ -499,7 +497,6 @@ func (h *Handler) LikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/posts/")
 	idStr = strings.TrimSuffix(idStr, "/like")
 	idStr = strings.Trim(idStr, "/")
